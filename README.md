@@ -35,10 +35,13 @@ DrugCell training/testing scripts require the following environmental setup:
     * numpy
     * networkx 
     * A virtual environment to run model training/testing can be created using _environment_setup/environment.yml_ file
-        * conda env create -f _environment.yml_
+        ```
+        conda env create -f _environment.yml_
+        ```
     * After setting up the conda virtual environment, make sure to activate environment before executing DrugCell scripts.
-        * source activate pytorch3drugcell
-
+        ```
+        source activate pytorch3drugcell
+        ```
 
 # DrugCell release v1.0
 DrugCell v1.0 was trained using (cell line, drug) pairs, but 
@@ -77,19 +80,19 @@ _data_ and _sample_ folder)
 
 2. To load it in a cpu server, execute the following:
     ```
-    python predict_drugcell_cpu.py -gene2id _gene2ind.txt_ 
-                                   -cell2id _cell2ind.txt_ 
-                                   -drug2id _drug2ind.txt_ 
-                                   -cellline _cell2mutation.txt_ 
-                                   -fingerprint _drug2fingerprint.txt_ 
-                                   -predict _testdata.txt_ 
-                                   -hidden _<path_to_directory_to_store_hidden_values>_ 
-                                   -result _<path_to_directory_to_store_prediction_results>_ 
-                                   -load _<path_to_model_file>_
+    python predict_drugcell_cpu.py -gene2id gene2ind.txt
+                                   -cell2id cell2ind.txt 
+                                   -drug2id drug2ind.txt 
+                                   -cellline cell2mutation.txt 
+                                   -fingerprint drug2fingerprint.txt 
+                                   -predict testdata.txt 
+                                   -hidden <path_to_directory_to_store_hidden_values>
+                                   -result <path_to_directory_to_store_prediction_results>
+                                   -load <path_to_model_file>
     ```
     * A bash script is provided in _sample_ folder as a specific example. 
 
-3. To run the model in a GPU server, run predict_drugcell.py (instead of predict_drugcell_cpu.py) 
+3. To run the model in a GPU server, run _predict_drugcell.py_ (instead of _predict_drugcell_cpu.py_) 
 with same set of parameters as 2.
 
 
