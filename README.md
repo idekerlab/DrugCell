@@ -33,16 +33,14 @@ DrugCell training/testing scripts require the following environmental setup:
     * Python v2.7
     * PyTorch
     * numpy
-    * scipy
-    * pandas
     * networkx 
-    * A virtual environment to run model training/testing can be created using environment.yml file
-        * conda env create -f environment.yml
+    * A virtual environment to run model training/testing can be created using _environment_setup/environment.yml_ file
+        * conda env create -f _environment.yml_
     * After setting up the conda virtual environment, make sure to activate environment before executing DrugCell scripts.
         * source activate pytorch3drugcell
 
 
-# DrugCell model release v1.0
+# DrugCell release v1.0
 DrugCell v1.0 was trained using (cell line, drug) pairs, but 
 it can be generalized to estimate response of any cells to any drugs if:
 1. The feature vector of cell is built as a binary vector representing 
@@ -74,14 +72,22 @@ Required input files:
 To load a pre-trained model used for analyses in our manuscript and make prediction for (cell, drug) pairs of 
 your interest, execute the following:
 1. Make sure you have _gene2ind.txt_, _cell2ind.txt_, _cell2mutation.txt_, _drug2ind.txt_, 
-_drug2fingerprint.txt_, and testdata.txt files in proper format (examples are provided in 
+_drug2fingerprint.txt_, and your file containing test data in proper format (examples are provided in 
 _data_ and _sample_ folder)
 
 2. To load it in a cpu server, execute the following:
-    * python predict_drugcell_cpu.py -gene2id _gene2ind.txt_ -cell2id _cell2ind.txt_ 
-    -drug2id _drug2ind.txt_ -cellline _cell2mutation.txt_ -fingerprint _drug2fingerprint.txt_ 
-    -predict _testdata.txt_ -hidden <path_to_directory_to_store_hidden_values> 
-    -result <path_to_directory_to_store_prediction_results> -load <path_to_model_file> 
+    ```
+    python predict_drugcell_cpu.py -gene2id _gene2ind.txt_ 
+                                   -cell2id _cell2ind.txt_ 
+                                   -drug2id _drug2ind.txt_ 
+                                   -cellline _cell2mutation.txt_ 
+                                   -fingerprint _drug2fingerprint.txt_ 
+                                   -predict _testdata.txt_ 
+                                   -hidden _<path_to_directory_to_store_hidden_values>_ 
+                                   -result _<path_to_directory_to_store_prediction_results>_ 
+                                   -load _<path_to_model_file>_
+    ```
+    * A bash script is provided in _sample_ folder as a specific example. 
 
 3. To run the model in a GPU server, run predict_drugcell.py (instead of predict_drugcell_cpu.py) 
 with same set of parameters as 2.
