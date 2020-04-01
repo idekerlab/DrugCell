@@ -92,7 +92,7 @@ _data_ and _sample_ folder)
                                    -load <path_to_model_file>
                                    -cuda <GPU_unit_to_use> (optional)
     ```
-    * An example bash script (_/commandline_test_gpu.sh_) is provided in _sample_ folder.  
+    * An example bash script (_commandline_test_gpu.sh_) is provided in _sample_ folder.  
  
 3. To load and test the DrugCell model in CPU, run _predict_drugcell_cpu.py_ 
 (instead of _predict_drugcell.py_) with same set of parameters as 2. _-cuda_ option is 
@@ -161,17 +161,19 @@ the drug branch of the resulting DrugCell model will be a fully-connected neural
 consisting of 100, 50, and 6 neurons. 
 
 4. _-final_hiddens_: the number of neurons in the top layer of DrugCell that combines 
-the genotype and the drug branches. The default is 6
+the genotype-encoding and the drug-encoding branches. The default is 6.
 
 5. _-epoch_: the number of epoch to run during the training phase. The default is set to 300.
 
 6. _-batchsize_: the size of each batch to process at a time. The deafult is set to 5000. 
-You may increase this number to speed the training process up within the memory capacity 
+You may increase this number to speed up the training process within the memory capacity 
 of your GPU server.
 
+7. _-cuda_: the ID of GPU unit that you want to use for the model training. The default setting 
+is to use GPU 0. 
 
 Finally, to train a DrugCell model, execute a command line similar to the example provided in 
-_sample_ folder (commandline_cuda.sh):
+_sample/commandline_cuda.sh_:
 
 ```
 python -u train_drugcell.py -onto drugcell_ont.txt 
@@ -188,6 +190,7 @@ python -u train_drugcell.py -onto drugcell_ont.txt
                             -final_hiddens 6
                             -epoch 100
                             -batchsize 5000
+                            -cuda 1
 ```
 
 
