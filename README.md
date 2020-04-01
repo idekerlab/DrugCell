@@ -23,20 +23,20 @@ in cancer.
 Drugs are encoded using Morgan Fingerprint (radius = 2), and the resulting 
 feature vectors are binary vectors of length 2,046. 
 
-# Environment set up for training and testing of DrugCell v1.0 
+# Environment set up for training and testing of DrugCell
 DrugCell training/testing scripts require the following environmental setup:
 
 * Hardware
     * GPU server with CUDA>=10 installed
 
 * Software
-    * Python v2.7
+    * Python 2.7 or >=3.6
     * PyTorch
     * numpy
     * networkx 
     * A virtual environment to run model training/testing can be created using _environment_setup/environment.yml_ file
         ```
-        conda env create -f _environment.yml_
+        conda env create -f environment.yml
         ```
     * After setting up the conda virtual environment, make sure to activate environment before executing DrugCell scripts.
         ```
@@ -67,33 +67,131 @@ Required input files:
     * _drug2fingerprint.txt_: a comma-delimited file where each row has 2,046 binary values which would form 
     , when combined, a Morgan Fingerprint representation of each drug. 
     The line number of should match with the indices of drugs in _drug2ind.txt_ file. 
-3. Test data file: testdata.txt
+3. Test data file: _drugcell_test.txt_
     * A tab-delimited file containing all data points that you want to estimate drug response for. 
     The 1st column is identification of cells (genotypes) and the 2nd column is identification of 
     drugs.
     
 To load a pre-trained model used for analyses in our manuscript and make prediction for (cell, drug) pairs of 
 your interest, execute the following:
+
 1. Make sure you have _gene2ind.txt_, _cell2ind.txt_, _cell2mutation.txt_, _drug2ind.txt_, 
 _drug2fingerprint.txt_, and your file containing test data in proper format (examples are provided in 
 _data_ and _sample_ folder)
 
-2. To load it in a cpu server, execute the following:
+2. To run the model in a GPU server,  execute the following:
     ```
     python predict_drugcell_cpu.py -gene2id gene2ind.txt
                                    -cell2id cell2ind.txt 
                                    -drug2id drug2ind.txt 
-                                   -cellline cell2mutation.txt 
+                                   -genotype cell2mutation.txt 
                                    -fingerprint drug2fingerprint.txt 
                                    -predict testdata.txt 
                                    -hidden <path_to_directory_to_store_hidden_values>
                                    -result <path_to_directory_to_store_prediction_results>
                                    -load <path_to_model_file>
+                                   -cuda <GPU_unit_to_use> (optional)
     ```
-    * A bash script is provided in _sample_ folder as a specific example. 
+    * An example bash script (_/commandline_test_gpu.sh_) is provided in _sample_ folder.  
+ 
+3. To load and test the DrugCell model in CPU, run _predict_drugcell_cpu.py_ 
+(instead of _predict_drugcell.py_) with same set of parameters as 2. _-cuda_ option is 
+not available in this scenario. 
 
-3. To run the model in a GPU server, run _predict_drugcell.py_ (instead of _predict_drugcell_cpu.py_) 
-with same set of parameters as 2.
+
+# Train a new DrugCell model
+To train a new DrugCell model using a custom data set, first make sure that you have 
+a proper virtual environment set up. Also make sure that you have all the required files 
+to run the training scripts:
+
+1. Cell feature files: _gene2ind.txt_, _cell2ind.txt_, _cell2mutation.txt_
+    * A detailed description about the contents of the files is given in _DrugCell release v1.0_ section.
+   
+2. Drug feature files: _drug2ind.txt_, _drug2fingerprints.txt_
+    * A detailed description about the contents of the files is given in _DrugCell release v1.0_ section.
+
+3. Training data file: _drugcell_train.txt_
+    * A tab-delimited file containing all data points that you want to use to train the model. 
+    The 1st column is identification of cells (genotypes), the 2nd column is identification of 
+    drugs and the 3rd column is an observed drug response in a floating number. The current 
+    version of the DrugCell code utilizes a loss function better suited for a regression problem (Minimum Squared Error; MSE), 
+    and we recommend using the code to train a regressor rather a classifier. 
+  
+4. Validation data file: _drugcell_val.txt_
+    * A tab-delimited file that in the same format as the training data. DrugCell training 
+    script would evaluate the model trained in each iteration using the data contained 
+    in this file. The performance of the model on the validation data may be used 
+    as an early termination condition.
+    
+5. Ontology (hierarchy) file: _drugcell_ont.txt_
+    * A tab-delimited file that contains the ontology (hierarchy) that defines the structure of a branch 
+    of a DrugCell model that encodes the genotypes. The first column is always a term (subsystem or pathway), 
+    and the second column is a term or a gene. 
+    The third column should be set to "default" when the line represents a link between terms, 
+    "gene" when the line represents an annotation link between a term and a gene. 
+    The following is an example describing a sample hierarchy.
+    
+        ![](misc/drugcell_ont_image_sample.png)
+
+    ```
+     GO:0045834	GO:0045923	default
+     GO:0045834	GO:0043552	default
+     GO:0045923	AKT2	gene
+     GO:0045923	IL1B	gene
+     GO:0043552	PIK3R4	gene
+     GO:0043552	SRC	gene
+     GO:0043552	FLT1	gene       
+    ```
+        
+     * Example of the file (_drugcell_ont.txt_) is provided in _data_ folder.    
+
+     
+There are a few optional parameters that you can provide in addition to the input files:
+
+1. _-model_: a name of directory where you want to store the trained models. The default 
+is set to "MODEL" in the current working directory.
+
+2. _-genotype_hiddens_: a number of neurons to assign each subsystem in the hierarchy. 
+The default is set to 6. 
+
+3. _-drug_hiddens_: a string listing the number of neurons for the drug-encoding branch 
+of DrugCell. The number should be delimited by comma. The default value is "100,50,6", 
+and with the default option, 
+the drug branch of the resulting DrugCell model will be a fully-connected neural network with 3 layers 
+consisting of 100, 50, and 6 neurons. 
+
+4. _-final_hiddens_: the number of neurons in the top layer of DrugCell that combines 
+the genotype and the drug branches. The default is 6
+
+5. _-epoch_: the number of epoch to run during the training phase. The default is set to 300.
+
+6. _-batchsize_: the size of each batch to process at a time. The deafult is set to 5000. 
+You may increase this number to speed the training process up within the memory capacity 
+of your GPU server.
+
+
+Finally, to train a DrugCell model, execute a command line similar to the example provided in 
+_sample_ folder (commandline_cuda.sh):
+
+```
+python -u train_drugcell.py -onto drugcell_ont.txt 
+                            -gene2id gene2ind.txt 
+                            -cell2id cell2ind.txt
+                            -drug2id drug2ind.txt
+                            -genotype cell2mutation.txt
+                            -fingerprint drug2fingerprints.txt
+                            -train drugcell_train.txt 
+                            -test drugcell_val.txt 
+                            -model ./MODEL
+                            -genotype_hiddens 6
+                            -drug_hiddens "100,50,6"
+                            -final_hiddens 6
+                            -epoch 100
+                            -batchsize 5000
+```
+
+
+
 
 
 
