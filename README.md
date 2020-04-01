@@ -131,7 +131,7 @@ to run the training scripts:
     "gene" when the line represents an annotation link between a term and a gene. 
     The following is an example describing a sample hierarchy.
     
-        ![](misc/drugcell_ont_image_sample.png)
+        ![](https://github.com/idekerlab/DrugCell/blob/master/misc/drugcell_ont_image_sample.png)
 
     ```
      GO:0045834	GO:0045923	default
