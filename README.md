@@ -92,7 +92,7 @@ _data_ and _sample_ folder)
                                    -load <path_to_model_file>
                                    -cuda <GPU_unit_to_use> (optional)
     ```
-    * An example bash script (_commandline_test_gpu.sh_) is provided in _sample_ folder. To execute the bash script, run ./commandline_test_gpu.sh <GPU_unit_to_use>(optional, default is 0) in the _sample_ directory. 
+    * An example bash script (_commandline_test_gpu.sh_) is provided in _sample_ folder. 
  
 3. To load and test the DrugCell model in CPU, run _predict_drugcell_cpu.py_ 
 (instead of _predict_drugcell.py_) with same set of parameters as 2. _-cuda_ option is 
@@ -192,7 +192,6 @@ python -u train_drugcell.py -onto drugcell_ont.txt
                             -batchsize 5000
                             -cuda 1
 ```
-To execute the example bash script, run ./commandline_train.sh in the _sample_ directory.
 
 
 
