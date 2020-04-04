@@ -112,7 +112,7 @@ def train_model(root, term_size_map, term_direct_gene_map, dG, train_data, gene_
 		train_corr = pearson_corr(train_predict, train_label_gpu)
 
 		#if epoch % 10 == 0:
-		torch.save(model, model_save_folder + '/model_' + str(epoch))
+		torch.save(model, model_save_folder + '/model_' + str(epoch) + '.pt')
 
 		#Test: random variables in training mode become static
 		model.eval()
@@ -141,7 +141,7 @@ def train_model(root, term_size_map, term_direct_gene_map, dG, train_data, gene_
 			max_corr = test_corr
 			best_model = epoch
 
-	torch.save(model, model_save_folder + '/model_final')	
+	torch.save(model, model_save_folder + '/model_final.pt')	
 
 	print("Best performed model (epoch)\t%d" % best_model)
 

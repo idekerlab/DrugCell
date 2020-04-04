@@ -8,7 +8,7 @@ testdatafile=$inputdir"drugcell_test.txt"
 mutationfile=$inputdir"cell2mutation.txt"
 drugfile=$inputdir"drug2fingerprint.txt"
 
-modelfile="../pretrained_model/model_100"
+modelfile="../pretrained_model/drugcell_v1.pt"
 
 resultdir="Result_sample"
 hiddendir="Hidden_sample"
