@@ -21,7 +21,7 @@ the feature vector for each cell is a binary vector representing
 mutational status of the top 15% most frequently mutated genes (n = 3,008) 
 in cancer. 
 Drugs are encoded using Morgan Fingerprint (radius = 2), and the resulting 
-feature vectors are binary vectors of length 2,046. 
+feature vectors are binary vectors of length 2,048. 
 
 # Environment set up for training and testing of DrugCell
 DrugCell training/testing scripts require the following environmental setup:
@@ -79,7 +79,7 @@ it can be generalized to estimate response of any cells to any drugs if:
 1. The feature vector of cell is built as a binary vector representing 
 mutational status of 3,008 genes (the list of index and name of the genes 
 is provided in _gene2ind.txt_). 
-2. The feature vector of drug is encoded into a binary vector of length 2,046 
+2. The feature vector of drug is encoded into a binary vector of length 2,048 
 using Morgan Fingerprint (radius = 2). We also provide the pre-computed 
 feature vectors for 684 drugs in our training data (_drug2fingerprint.txt_).
 
@@ -94,7 +94,7 @@ Required input files:
     * _drug2ind.txt_: a tab-delimited file where the 1st column is index of drug and the 2nd column is 
     identification of each drug (e.g., SMILES representation or name). The identification of drugs 
     should match to those in _drug2fingerprint.txt_ file. 
-    * _drug2fingerprint.txt_: a comma-delimited file where each row has 2,046 binary values which would form 
+    * _drug2fingerprint.txt_: a comma-delimited file where each row has 2,048 binary values which would form 
     , when combined, a Morgan Fingerprint representation of each drug. 
     The line number of should match with the indices of drugs in _drug2ind.txt_ file. 
 3. Test data file: _drugcell_test.txt_
