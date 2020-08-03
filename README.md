@@ -21,7 +21,7 @@ the feature vector for each cell is a binary vector representing
 mutational status of the top 15% most frequently mutated genes (n = 3,008) 
 in cancer. 
 Drugs are encoded using Morgan Fingerprint (radius = 2), and the resulting 
-feature vectors are binary vectors of length 2,046. 
+feature vectors are binary vectors of length 2,048. 
 
 # Environment set up for training and testing of DrugCell
 DrugCell training/testing scripts require the following environmental setup:
@@ -33,10 +33,9 @@ DrugCell training/testing scripts require the following environmental setup:
     * Python 2.7 or >=3.6
     * Anaconda
         * Relevant information for installing Anaconda can be found in: https://docs.conda.io/projects/conda/en/latest/user-guide/install/.
-    * PyTorch
-        * The current release of DrugCell model was trained/tested using PyTorch 1.4.0
+    * PyTorch >=0.4
         * Depending on the specification of your machine, run appropriate command to install PyTorch. 
-        The installation command line can be found in https://pytorch.org/. 
+        The installation command line can be found in https://pytorch.org/. Specify **Conda** as your default package. 
         * Example 1: if you are working with a **CPU machine** running on **MAC OS X**, execute the following command line:
         ```angular2
         conda install pytorch torchvision -c pytorch
@@ -49,6 +48,8 @@ DrugCell training/testing scripts require the following environmental setup:
         ```angular2
         conda install pytorch torchvision cudatoolkit=10.1 -c pytorch
         ```
+     * networkx
+     * numpy
 
 * Set up a virtual environment
     * If you are testing the pre-trained model using a CPU machine, run the following command line to set up an 
@@ -69,7 +70,7 @@ DrugCell training/testing scripts require the following environmental setup:
     * After setting up the conda virtual environment, make sure to activate environment before executing DrugCell scripts. 
     When testing in _sample_ directory, no need to run this as the example bash scripts already have the command line. 
         ```
-        source activate pytorch3drugcell
+        source activate pytorch3drugcell (or pytorch3drugcellcpu)
         ```
 
 
@@ -79,7 +80,7 @@ it can be generalized to estimate response of any cells to any drugs if:
 1. The feature vector of cell is built as a binary vector representing 
 mutational status of 3,008 genes (the list of index and name of the genes 
 is provided in _gene2ind.txt_). 
-2. The feature vector of drug is encoded into a binary vector of length 2,046 
+2. The feature vector of drug is encoded into a binary vector of length 2,048 
 using Morgan Fingerprint (radius = 2). We also provide the pre-computed 
 feature vectors for 684 drugs in our training data (_drug2fingerprint.txt_).
 
@@ -94,7 +95,7 @@ Required input files:
     * _drug2ind.txt_: a tab-delimited file where the 1st column is index of drug and the 2nd column is 
     identification of each drug (e.g., SMILES representation or name). The identification of drugs 
     should match to those in _drug2fingerprint.txt_ file. 
-    * _drug2fingerprint.txt_: a comma-delimited file where each row has 2,046 binary values which would form 
+    * _drug2fingerprint.txt_: a comma-delimited file where each row has 2,048 binary values which would form 
     , when combined, a Morgan Fingerprint representation of each drug. 
     The line number of should match with the indices of drugs in _drug2ind.txt_ file. 
 3. Test data file: _drugcell_test.txt_
@@ -222,7 +223,6 @@ python -u train_drugcell.py -onto drugcell_ont.txt
                             -batchsize 5000
                             -cuda 1
 ```
-
 
 # Example data files in _sample_ directory
 There are three subsets of our training data provided as toy example: drugcell_train.txt, drugcell_test.txt and drugcell_val.txt have 10,000, 1,000, and 1,000 (cell line, drug) pairs along with the corresponding drug response (area under the dose-response curve). 
