@@ -23,7 +23,7 @@ in cancer.
 Drugs are encoded using Morgan Fingerprint (radius = 2), and the resulting 
 feature vectors are binary vectors of length 2,048. 
 
-![DrugCell poster](https://github.com/idekerlab/DrugCell/tree/master/misc/drugcell_poster3.png)
+![DrugCell poster](https://github.com/idekerlab/DrugCell/tree/master/misc/drugcell_poster4.png)
 
 # Environment set up for training and testing of DrugCell
 DrugCell training/testing scripts require the following environmental setup:
