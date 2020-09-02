@@ -84,6 +84,9 @@ gene2id_mapping = load_mapping(opt.gene2id)
 cell_features = np.genfromtxt(opt.genotype, delimiter=',')
 drug_features = np.genfromtxt(opt.fingerprint, delimiter=',')
 
+print("printing drug features")
+print(drug_features)
+
 num_cells = len(cell2id_mapping)
 num_drugs = len(drug2id_mapping)
 num_genes = len(gene2id_mapping)
