@@ -229,4 +229,4 @@ There are three subsets of our training data provided as toy example: drugcell_t
 
 # DrugCell v1.0 model and training data
 The pre-trained DrugCell model (DrugCell v1.0) and the drug response data used to train the model is shared in the following location:
-https://drugcell.ucsd.edu/downloads
+http://drugcell.ucsd.edu/downloads
