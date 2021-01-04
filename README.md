@@ -226,3 +226,7 @@ python -u train_drugcell.py -onto drugcell_ont.txt
 
 # Example data files in _sample_ directory
 There are three subsets of our training data provided as toy example: drugcell_train.txt, drugcell_test.txt and drugcell_val.txt have 10,000, 1,000, and 1,000 (cell line, drug) pairs along with the corresponding drug response (area under the dose-response curve). 
+
+# DrugCell v1.0 model and training data
+The pre-trained DrugCell model (DrugCell v1.0) and the drug response data used to train the model is shared in the following location:
+https://drugcell.ucsd.edu/downloads
