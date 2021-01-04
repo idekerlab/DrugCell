@@ -84,7 +84,7 @@ is provided in _gene2ind.txt_).
 using Morgan Fingerprint (radius = 2). We also provide the pre-computed 
 feature vectors for 684 drugs in our training data (_drug2fingerprint.txt_).
 
-** Pre-trained DrugCell v1.0 model and the drug response data for 509,294 (cell line, drug) pairs used to train the model is shared in http://drugcell.ucsd.edu/downloads. **
+**Pre-trained DrugCell v1.0 model and the drug response data for 509,294 (cell line, drug) pairs used to train the model is shared in http://drugcell.ucsd.edu/downloads.**
 
 Required input files:
 1. Cell feature files: _gene2ind.txt_, _cell2ind.txt_, _cell2mutation.txt_
