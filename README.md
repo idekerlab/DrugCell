@@ -84,6 +84,8 @@ is provided in _gene2ind.txt_).
 using Morgan Fingerprint (radius = 2). We also provide the pre-computed 
 feature vectors for 684 drugs in our training data (_drug2fingerprint.txt_).
 
+* Pre-trained DrugCell v1.0 model and the drug response data for 509,294 (cell line, drug) pairs used to train the model is shared in http://drugcell.ucsd.edu/downloads.
+
 Required input files:
 1. Cell feature files: _gene2ind.txt_, _cell2ind.txt_, _cell2mutation.txt_
     * _gene2ind.txt_: make sure you are using _gene2ind.txt_ file provided in this repository.
@@ -227,6 +229,3 @@ python -u train_drugcell.py -onto drugcell_ont.txt
 # Example data files in _sample_ directory
 There are three subsets of our training data provided as toy example: drugcell_train.txt, drugcell_test.txt and drugcell_val.txt have 10,000, 1,000, and 1,000 (cell line, drug) pairs along with the corresponding drug response (area under the dose-response curve). 
 
-# DrugCell v1.0 model and training data
-The pre-trained DrugCell model (DrugCell v1.0) and the drug response data used to train the model is shared in the following location:
-http://drugcell.ucsd.edu/downloads
