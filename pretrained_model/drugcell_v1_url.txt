@@ -1,5 +1,5 @@
 Due to a technical issue, we are hosting the pre-trained model at:
-https://drugcell.ucsd.edu/downloads/
+http://drugcell.ucsd.edu/downloads/
 
 Please visit the URL to manually download the DrugCell v1.0 model. Thanks!
 
