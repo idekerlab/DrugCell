@@ -3,7 +3,7 @@ inputdir="../data/"
 gene2idfile=$inputdir"gene2ind.txt"
 cell2idfile=$inputdir"cell2ind.txt"
 drug2idfile=$inputdir"drug2ind.txt"
-traindatafile=$inputdir"drugcell_test.txt"
+traindatafile=$inputdir"drugcell_train.txt"
 valdatafile=$inputdir"drugcell_val.txt"
 ontfile=$inputdir"drugcell_ont.txt"
 
