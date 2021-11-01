@@ -114,7 +114,7 @@ _data_ and _sample_ folder)
 
 2. To run the model in a GPU server,  execute the following:
     ```
-    python predict_drugcell_cpu.py -gene2id gene2ind.txt
+    python predict_drugcell.py -gene2id gene2ind.txt
                                    -cell2id cell2ind.txt 
                                    -drug2id drug2ind.txt 
                                    -genotype cell2mutation.txt 
