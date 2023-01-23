@@ -14,50 +14,50 @@ import argparse
 
 def predict_dcell(predict_data, gene_dim, drug_dim, model_file, hidden_folder, batch_size, result_file, cell_features, drug_features):
 
-	feature_dim = gene_dim + drug_dim
+    feature_dim = gene_dim + drug_dim
 
-	model = torch.load(model_file, map_location=lambda storage, location: storage)
+    model = torch.load(model_file, map_location=lambda storage, location: storage)
 
-	predict_feature, predict_label = predict_data
+    predict_feature, predict_label = predict_data
 
-	model.eval()
+    model.eval()
 
-	test_loader = du.DataLoader(du.TensorDataset(predict_feature,predict_label), batch_size=batch_size, shuffle=False)
+    test_loader = du.DataLoader(du.TensorDataset(predict_feature,predict_label), batch_size=batch_size, shuffle=False)
 
-	#Test
-	test_predict = torch.zeros(0,0)
-	term_hidden_map = {}	
+    #Test
+    test_predict = torch.zeros(0,0)
+    term_hidden_map = {}
 
-	batch_num = 0
-	for i, (inputdata, labels) in enumerate(test_loader):
-		# Convert torch tensor to Variable
-		features = build_input_vector(inputdata, cell_features, drug_features)
+    batch_num = 0
+    for i, (inputdata, labels) in enumerate(test_loader):
+        # Convert torch tensor to Variable
+        features = build_input_vector(inputdata, cell_features, drug_features)
 
-		# make prediction for test data
-		aux_out_map, term_hidden_map = model(features)
+        # make prediction for test data
+        aux_out_map, term_hidden_map = model(features)
 
-		if test_predict.size()[0] == 0:
-			test_predict = aux_out_map['final'].data
-		else:
-			test_predict = torch.cat([test_predict, aux_out_map['final'].data], dim=0)
+        if test_predict.size()[0] == 0:
+            test_predict = aux_out_map['final'].data
+        else:
+            test_predict = torch.cat([test_predict, aux_out_map['final'].data], dim=0)
 
-		for term, hidden_map in term_hidden_map.items():
-			this_hidden_file = hidden_folder+'/'+term+'_'+str(i)+'.txt'
-			hidden_file = hidden_folder+'/'+term+'.hidden'
+        for term, hidden_map in term_hidden_map.items():
+            this_hidden_file = hidden_folder+'/'+term+'_'+str(i)+'.txt'
+            hidden_file = hidden_folder+'/'+term+'.hidden'
 
-			np.savetxt(this_hidden_file, hidden_map.data.cpu().numpy(), '%.4e')	
-			
-			# append it to one file
-			os.system('cat ' + this_hidden_file + ' >> ' + hidden_file)
-			os.system('rm ' + this_hidden_file)
+            np.savetxt(this_hidden_file, hidden_map.data.cpu().numpy(), '%.4e')
+
+            # append it to one file
+            os.system('cat ' + this_hidden_file + ' >> ' + hidden_file)
+            os.system('rm ' + this_hidden_file)
 
 
-		batch_num += 1
+        batch_num += 1
 
-	test_corr = pearson_corr(test_predict, predict_label)
-	print("Test pearson corr\t%s\t%.6f" % (model.root, test_corr))
+    test_corr = pearson_corr(test_predict, predict_label)
+    print("Test pearson corr\t%s\t%.6f" % (model.root, test_corr))
 
-	np.savetxt(result_file+'/drugcell.predict', test_predict.numpy(),'%.4e')
+    np.savetxt(result_file+'/drugcell.predict', test_predict.numpy(),'%.4e')
 
 
 
@@ -92,4 +92,4 @@ num_drugs = len(drug2id_mapping)
 num_genes = len(gene2id_mapping)
 drug_dim = len(drug_features[0,:])
 
-predict_dcell(predict_data, num_genes, drug_dim, opt.load, opt.hidden, opt.batchsize, opt.result, cell_features, drug_features)	
+predict_dcell(predict_data, num_genes, drug_dim, opt.load, opt.hidden, opt.batchsize, opt.result, cell_features, drug_features)
