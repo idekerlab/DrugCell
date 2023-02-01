@@ -6,9 +6,9 @@ import torch.utils.data as du
 from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
-import util
-from util import *
-from drugcell_NN import *
+#import util
+from .utils.util import *
+from .drugcell_NN import *
 import argparse
 import numpy as np
 import time

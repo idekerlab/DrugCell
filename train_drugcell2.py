@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Train PaccMann predictor."""
+"""Train DrugCell predictor."""
 import logging
 import sys
 from time import time
@@ -16,11 +16,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torchmetrics.functional import mean_absolute_error
+from scipy.stats import spearmanr
 #import code.utils.util
 from code.utils.util import *
 from code.drugcell_NN import *
-from torchmetrics import R2Score
-from torchmetrics.functional import spearman_corrcoef
 import argparse
 import numpy as np
 import time
@@ -58,28 +57,17 @@ def calc_mae(y_true, y_pred):
     return sklearn.metrics.mean_absolute_error(y_true=y_true, y_pred=y_pred)
 
 def calc_r2(y_true, y_pred):
-    return sklearn.metrics.r2_score(y_true=y_true, y_pred=y_pred)
+    target_mean = torch.mean(y_pred)
+    ss_tot = torch.sum((y_pred - target_mean) ** 2)
+    ss_res = torch.sum((y_pred - y_true) ** 2)
+    r2 = 1 - ss_res / ss_tot
+    return r2
+
 
 def calc_pcc(x, y):
     xx = x - torch.mean(x)
     yy = y - torch.mean(y)
     return torch.sum(xx*yy) / (torch.norm(xx, 2)*torch.norm(yy,2))
-
-
-def _get_ranks(x: torch.Tensor) -> torch.Tensor:
-    tmp = x.argsort()
-    ranks = torch.zeros_like(tmp)
-    ranks[tmp] = torch.arange(len(x))
-    return ranks
-
-def calc_scc(x,  y):
-    x_rank = _get_ranks(x)
-    y_rank = _get_ranks(y)
-    
-    n = x.size(0)
-    upper = 6 * torch.sum((x_rank - y_rank).pow(2))
-    down = n * (n ** 2 - 1.0)
-    return 1.0 - (upper / down)
 
 
 def create_term_mask(term_direct_gene_map, gene_dim, cuda):
@@ -124,7 +112,8 @@ def main(params):
     logger.info("Start data preprocessing...")
 
     #Load and parse inputs
-    train_data, cell2id_mapping, drug2id_mapping = prepare_train_data(train_data, test_data, cell2id, drug2id)
+    train_data, feature_dict, cell2id_mapping, drug2id_mapping = prepare_train_data(train_data, test_data,
+                                                                                    cell2id, drug2id)
     gene2id_mapping = load_mapping(gene2id)
 
     # load cell/drug features
@@ -158,15 +147,11 @@ def main(params):
     model = drugcell_nn(term_size_map, term_direct_gene_map, dG, num_genes,
                         drug_dim, root, num_hiddens_genotype, num_hiddens_drug, num_hiddens_final)
     train_feature, train_label, test_feature, test_label = train_data
-    
 
     device = torch.device("cuda")
     model.to(device)
     model.cuda(CUDA_ID)
     
-#    device = torch.device(cuda_name if torch.cuda.is_available() else "cpu")
-    print("Device", device)
-
     train_label_gpu = torch.autograd.Variable(train_label.cuda(CUDA_ID))
     test_label_gpu = torch.autograd.Variable(test_label.cuda(CUDA_ID))
     term_mask_map = create_term_mask(model.term_direct_gene_map, num_genes, CUDA_ID)
@@ -179,14 +164,8 @@ def main(params):
                            betas=(0.9, 0.99),
                            eps=params['eps'])
     optimizer.zero_grad()
-    train_losses = []
-    val_losses = []
-    val_pearsons = []
-    
     timer.display_timer()
 
-#    model.save(save_top_model.format('epoch', '0', 
-    
     ckpt = candle.CandleCkptPyTorch(params)
     ckpt.set_model({"model": model, "optimizer": optimizer})
     J = ckpt.restart(model)
@@ -196,6 +175,12 @@ def main(params):
         print("restarting from ckpt: initial_epoch: %i" % initial_epoch)
     
     scores = {}
+    epoch_list = []
+    train_loss_list = []
+    train_corr_list = []
+    test_loss_list = []
+    test_corr_list = []
+    
     for name, param in model.named_parameters():
         term_name = name.split('_')[0]
         if '_direct_gene_layer.weight' in name:
@@ -209,9 +194,9 @@ def main(params):
     test_loader = du.DataLoader(du.TensorDataset(test_feature,test_label),
                                 batch_size=params['batch_size'], shuffle=False)
 
-    scores = {}
     for epoch in range(params['epochs']):
         model.train()
+        epoch_list.append(epoch)
         train_predict =  torch.zeros(0,0).cuda(CUDA_ID)
         logger.info(f"== Epoch [{epoch}/{params['epochs']}] ==")
         train_loss_mean = 0
@@ -222,7 +207,6 @@ def main(params):
             cuda_labels = torch.autograd.Variable(labels.cuda(CUDA_ID))
 
             optimizer.zero_grad()
-
             aux_out_map, _ = model(cuda_features)
 
             if train_predict.size()[0] == 0:
@@ -240,7 +224,8 @@ def main(params):
                 else:
                     train_loss += 0.2 * loss(output, cuda_labels)
             train_loss.backward()
-            train_loss_mean = train_loss/count
+#            train_loss_mean = train_loss/count
+            train_loss_mean = train_loss
             for name, param in model.named_parameters():
                 if '_direct_gene_layer.weight' not in name:
                     continue
@@ -248,7 +233,8 @@ def main(params):
                 param.grad.data = torch.mul(param.grad.data, term_mask_map[term_name])
 
             optimizer.step()
-
+        #epoch_train_test_df['train_loss'] = train_loss_mean.cpu().detach().numpy()/len(train_loader)
+        train_loss_list.append(train_loss_mean.cpu().detach().numpy()/len(train_loader))
         logger.info(
             "\t **** TRAINING ****   "
             f"Epoch [{epoch + 1}/{params['epochs']}], "
@@ -257,48 +243,94 @@ def main(params):
         )
 
         train_corr = pearson_corr(train_predict, train_label_gpu)
-        print(train_corr)
+        train_corr_list.append(train_corr.cpu().detach().numpy())
         torch.save(model, model_save_folder + '/model_' + str(epoch) + '.pt')
 
         model.eval()
 
         test_predict = torch.zeros(0,0).cuda(CUDA_ID)
 
+        test_loss = 0
+        tissue = []
+        drug = []
         for i, (inputdata, labels) in enumerate(test_loader):
             features = build_input_vector(inputdata, cell_features, drug_features)
             cuda_features = Variable(features.cuda(CUDA_ID))
-
             aux_out_map, _ = model(cuda_features)
-
+            values = inputdata.cpu().detach().numpy().tolist()
+            keys = [i for i in feature_dict for x in values if feature_dict [i]== x ]
+            tissue = [i.split(';')[0] for i in keys]
+            drug = [i.split(';')[1] for i in keys]
+            loss = nn.MSELoss()
             if test_predict.size()[0] == 0:
                 test_predict = aux_out_map['final'].data
+                loss_a =  loss(test_predict, cuda_labels)
+                test_loss += loss_a.item() 
             else:
                 test_predict = torch.cat([test_predict, aux_out_map['final'].data], dim=0)
-                print(test_predict)
-        test_corr = calc_pcc(test_predict, test_label_gpu)
-#        test_spea_corr = spearman_corrcoef(test_predict, test_label_gpu)
-        MSE = mean_absolute_error(test_predict, test_label_gpu)
-        print(MSE)
-#        r2 = R2Score(test_predict, test_label_gpu)
-#        print(r2)
+                loss_a =  loss(test_predict, cuda_labels)
+                test_loss += loss_a.item()
+        logger.info(
+            "\t **** TEST ****   "
+            f"Epoch [{epoch + 1}/{params['epochs']}], "
+            f"loss: {test_loss / len(test_loader):.5f}. "
+            f"This took {time() - t:.1f} secs."
+        )
+        predictions = np.array([p.cpu() for preds in test_predict for p in preds] ,dtype = np.float )
+        predictions = predictions[0:len(predictions)]
+        labels = np.array([l.cpu() for label in labels for l in label],dtype = np.float)
+        labels = labels[0:len(labels)]
+        test_pearson_a = calc_pcc(torch.Tensor(predictions), torch.Tensor(labels))
+        test_spearman_a = spearmanr(labels, predictions)[0]
+        test_mean_absolute_error = sklearn.metrics.mean_absolute_error(y_true=labels, y_pred=predictions)
+        test_r2 = sklearn.metrics.r2_score(y_true=labels, y_pred=predictions)
+        test_rmse_a = np.sqrt(np.mean((predictions - labels)**2))
+        test_loss_a = test_loss / len(test_loader)
         epoch_end_time = time()
+        test_loss_a = test_loss/len(test_loader)
+#        test_loss_a = test_loss.cpu().detach().numpy()/len(test_loader)
+        test_loss_list.append(test_loss_a)
+        test_corr_list.append(test_pearson_a.cpu().detach().numpy())
+        if epoch == 0:
+            min_test_loss = test_loss_a
+            scores['test_loss'] = min_test_loss
+            scores['test_pcc'] = test_pearson_a.cpu().detach().numpy().tolist()
+            scores['test_MSE'] = test_mean_absolute_error
+            scores['test_r2'] = test_r2
+            scores['test_scc'] = test_spearman_a
+        if test_loss_a < min_test_loss:
+            min_test_loss = test_loss_a
+            scores['test_loss'] = min_test_loss
+            scores['test_pcc'] = test_pearson_a.cpu().detach().numpy().tolist()
+            scores['test_MSE'] = test_mean_absolute_error
+            scores['test_r2'] = test_r2
+            scores['test_scc'] = test_spearman_a
 
-
-        print("epoch\t%d\tcuda_id\t%d\ttrain_corr\t%.6f\tval_corr\t%.6f\ttrain_loss\t%.6f\telapsed_time\t%s" % (epoch,
-                                                                                                                CUDA_ID,
-                                                                                                                train_corr, test_corr,
-                                                                                                                train_loss, epoch_end_time-epoch_start_time))
-        epoch_start_time = epoch_end_time
-
-        if test_corr >= max_corr:
-            max_corr = test_corr
+        if test_pearson_a >= max_corr:
+            max_corr = test_pearson_a
             best_model = epoch
-
-#        if epoch == 0:
-            
+            pred = pd.DataFrame({"Tissue": tissue, "Drug": drug, "True": labels, "Pred": predictions}).reset_index()
+            pred_fname = str(model_dir+'/results/test_pred.csv')
+            pred.to_csv(pred_fname, index=False)
+#        print("epoch\t%d\tcuda_id\t%d\ttrain_corr\t%.6f\tval_corr\t%.6f\ttrain_loss\t%.6f\telapsed_time\t%s" % (epoch,
+#                                                                                                                CUDA_ID,
+#                                                                                                                train_corr, test_corr,
+#                                                                                                                train_loss, epoch_end_time-epoch_start_time))
+        epoch_start_time = epoch_end_time
+        ckpt.ckpt_epoch(epoch, test_loss_a)
+        
     torch.save(model, model_save_folder + '/model_final.pt')
     print("Best performed model (epoch)\t%d" % best_model)
-
+    cols = ['epoch', 'train_loss', 'train_corr', 'test_loss', 'test_corr']
+    epoch_train_test_df = pd.DataFrame(columns=cols, index=range(params['epochs']))
+    epoch_train_test_df['epoch'] = epoch_list
+    epoch_train_test_df['train_loss'] = train_loss_list
+    epoch_train_test_df['train_corr'] = train_corr_list
+    epoch_train_test_df['test_loss'] = test_loss_list
+    epoch_train_test_df['test_corr'] = test_corr_list
+    loss_results_name = str(model_dir+'/results/loss_results.csv')
+    epoch_train_test_df.to_csv(loss_results_name, index=False)
+    return scores
     
 if __name__ == "__main__":
     main()
