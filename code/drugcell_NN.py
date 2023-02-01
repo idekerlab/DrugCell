@@ -54,7 +54,7 @@ class drugcell_nn(nn.Module):
 
             # log the number of hidden variables per each term
             num_output = int(num_output)
-            print("term\t%s\tterm_size\t%d\tnum_hiddens\t%d" % (term, term_size, num_output))
+#            print("term\t%s\tterm_size\t%d\tnum_hiddens\t%d" % (term, term_size, num_output))
             self.term_dim_map[term] = num_output
 
 
