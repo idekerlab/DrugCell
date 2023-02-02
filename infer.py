@@ -1,0 +1,229 @@
+import os
+import candle
+import torch
+import torchvision
+import numpy as np
+import networkx as nx
+import networkx.algorithms.components.connected as nxacc
+import networkx.algorithms.dag as nxadag
+from code.predict_drugcell import main
+from code.utils.util import load_mapping
+from code.utils.util import load_train_data
+from code.utils.util import build_input_vector
+from code.utils.util import pearson_corr
+
+file_path = os.path.dirname(os.path.realpath(__file__))
+print(file_path)
+
+# Just because the tensorflow warnings are a bit verbose
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+
+# This should be set outside as a user environment variable
+os.environ['CANDLE_DATA_DIR'] = os.environ['HOME'] + '/improve_data_dir/'
+
+
+# additional definitions
+additional_definitions = [
+    {
+        "name": "batchsize",
+        "type": int,
+        "help": "...",
+    },
+    {
+        "name": "gene2id",
+        "type": str,
+        "help": "path to gene2id file",
+    },
+    {   
+        "name": "drug2id",
+        "type": str,
+        "help": "path to drug to ID file",
+    },
+    {
+        "name": "cell2id",
+        "type": str,
+        "help": "Path to cell 2 id file",
+    },
+    {   
+        "name": "hidden",
+        "type": str, 
+        "help": "string to indicate hidden output layer ",
+    },
+    {   
+        "name": "cuda",
+        "type": int, 
+        "help": "CUDA ID",
+    },
+    {  
+        "name": "result",
+        "type": str, 
+        "help": "result file name",
+    },
+]
+
+# required definitions
+required = [
+    "genotype",
+    "fingerprint",
+]
+
+# initialize class
+class DrugCell_candle(candle.Benchmark):
+    def set_locals(self):
+        """
+        Functionality to set variables specific for the benchmark
+        - required: set of required parameters for the benchmark.
+        - additional_definitions: list of dictionaries describing the additional parameters for the benchmark.
+        """
+        if required is not None: 
+            self.required = set(required)
+        if additional_definitions is not None:
+            self.additional_definisions = additional_definitions
+
+
+def initialize_parameters():
+    preprocessor_bmk = DrugCell_candle(file_path,
+        'DrugCell_params.txt',
+        'pytorch',
+        prog='DrugCell_candle',
+        desc='Data Preprocessor'
+    )
+    #Initialize parameters
+    candle_data_dir = os.getenv("CANDLE_DATA_DIR")
+    gParameters = candle.finalize_parameters(preprocessor_bmk)
+    return gParameters
+
+def load_mapping(map_file):
+    mapping = {}
+    with open(map_file) as fin:
+        for raw_line in fin:
+            line  = raw_line.strip().split()
+            mapping[line[1]] = int(line[0])
+    return mapping
+
+def load_train_data(drug_data, cell2id_dict, drug2id_dict):
+    data = []
+    label = []
+    with open(drug_data) as fin:
+        for raw_line in fin:
+            tokens = raw_line.strip().split('\t')
+            data.append([cell2id_dict[tokens[0]], drug2id_dict[tokens[1]]])
+            label.append([float(tokens[2])])
+    return data, label
+
+
+def predict_dcell(predict_data, gene_dim, drug_dim, model_file, hidden_folder,
+                  batch_size, result_file, cell_features, drug_features, CUDA_ID):
+    feature_dim = gene_dim + drug_dim
+    device = torch.device("cuda")
+    model = torch.load(model_file, map_location='cuda:%d' % CUDA_ID)
+    #model = torch.load(model_file, map_location='cuda:0')
+    model.to(device)
+    #model = torch.load(model_file, map_location='cuda:%d' % CUDA_ID)
+
+    predict_feature, predict_label = predict_data
+
+    predict_label_gpu = predict_label.cuda(CUDA_ID)
+    model.cuda(CUDA_ID)
+    model.eval()
+
+    test_loader = du.DataLoader(du.TensorDataset(predict_feature,predict_label), batch_size=batch_size, shuffle=False)
+
+    #Test
+    test_predict = torch.zeros(0,0).cuda(CUDA_ID)
+    term_hidden_map = {}
+
+    batch_num = 0
+    for i, (inputdata, labels) in enumerate(test_loader):
+        # Convert torch tensor to Variable
+        features = build_input_vector(inputdata, cell_features, drug_features)
+        cuda_features = Variable(features.cuda(CUDA_ID), requires_grad=False)
+
+        # make prediction for test data
+        aux_out_map, term_hidden_map = model(cuda_features)
+        if test_predict.size()[0] == 0:
+            test_predict = aux_out_map['final'].data
+        else:
+            test_predict = torch.cat([test_predict, aux_out_map['final'].data], dim=0)
+        for term, hidden_map in term_hidden_map.items():
+            hidden_file = hidden_folder+'/'+term+'.hidden'
+            with open(hidden_file, 'ab') as f:
+                np.savetxt(f, hidden_map.data.cpu().numpy(), '%.4e')
+
+        batch_num += 1
+        
+    predictions = np.array([p.cpu() for preds in test_predict for p in preds] ,dtype = np.float )
+    predictions = predictions[0:len(predictions)]
+    labels = np.array([l.cpu() for label in labels for l in label],dtype = np.float)
+    labels = labels[0:len(labels)]
+    test_pearson_a = calc_pcc(torch.Tensor(predictions), torch.Tensor(labels))
+    test_spearman_a = spearmanr(labels, predictions)[0]
+    test_mean_absolute_error = sklearn.metrics.mean_absolute_error(y_true=labels, y_pred=predictions)
+    test_r2 = sklearn.metrics.r2_score(y_true=labels, y_pred=predictions)
+    test_rmse_a = np.sqrt(np.mean((predictions - labels)**2))
+    test_loss_a = test_loss / len(test_loader)
+    epoch_end_time = time()
+    test_loss_a = test_loss/len(test_loader)
+    test_loss_list.append(test_loss_a)
+    test_corr_list.append(test_pearson_a.cpu().detach().numpy())
+    scores = {}
+    min_test_loss = test_loss_a
+    scores['test_loss'] = min_test_loss
+    scores['test_pcc'] = test_pearson_a.cpu().detach().numpy().tolist()
+    scores['test_MSE'] = test_mean_absolute_error
+    scores['test_r2'] = test_r2
+    scores['test_scc'] = test_spearman_a
+    test_corr = pearson_corr(test_predict, predict_label_gpu)
+    print("Test pearson corr\t%s\t%.6f" % (model.root, test_corr))
+    np.savetxt(result_file+'/drugcell.predict', test_predict.cpu().numpy(),'%.4e')
+
+
+    
+def run(params):
+    keys_parsing = ["train_data", "test_data", "val_data",
+                    "onto", "genotype_hiddens", "fingerprint",
+                    "genotype", "cell2id","drug2id", "drug_hiddens",
+                    "model_name"]
+#    candle.file_utils.get_file(params['original_data'], params['data_url'])
+#    candle.file_utils.get_file(params['data_predict'], params['predict_url'])
+#    candle.file_utils.get_file(params['data_model'], params['model_url'])
+    print(os.environ['CANDLE_DATA_DIR'])
+    data_download_filepath = candle.get_file(params['original_data'], params['data_url'],
+                                        datadir = params['data_dir'],
+                                        cache_subdir = None)
+    print('download_path: {}'.format(data_download_filepath))
+    predict_download_filepath = candle.get_file(params['data_predict'], params['predict_url'],
+                                        datadir = params['data_dir'],
+                                        cache_subdir = None)
+    print('download_path: {}'.format(predict_download_filepath))
+    model_download_filepath = candle.get_file(params['data_model'], params['model_url'],
+                                        datadir = params['data_dir'],
+                                        cache_subdir = None)
+    print('download_path: {}'.format(model_download_filepath))
+
+    model_param_key = []
+    for key in params.keys():
+        if key not in keys_parsing:
+                model_param_key.append(key)
+    model_params = {key: params[key] for key in model_param_key}
+    params['model_params'] = model_params
+    args = candle.ArgumentStruct(**params)
+    cell2id_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/" + params['cell2id']
+    drug2id_path  = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/" + params['drug2id']
+    gene2id_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/" + params['gene2id']
+    genotype_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/" + params['genotype']
+    fingerprint_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/" + params['fingerprint']
+    hidden_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/" + params['hidden']
+    result_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/" + params['result']
+    main(predict_download_filepath, cell2id_path, drug2id_path, str(gene2id_path), genotype_path,
+          fingerprint_path, model_download_filepath, hidden_path,
+          params['batch_size'], result_path, params['cuda_id'])
+
+
+
+def candle_main():
+    params = initialize_parameters()
+    run(params)
+    
+if __name__ == "__main__":
+    candle_main()

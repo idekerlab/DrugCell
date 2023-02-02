@@ -72,7 +72,9 @@ DrugCell training/testing scripts require the following environmental setup:
         ```
         source activate pytorch3drugcell (or pytorch3drugcellcpu)
         ```
+## Installation
 
+This model is curated as poart of the [_IMPROVE Project_](https://github.com/JDACS4C-IMPROVE)
 
 # DrugCell release v1.0
 DrugCell v1.0 was trained using (cell line, drug) pairs, but 

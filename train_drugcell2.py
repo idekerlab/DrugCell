@@ -143,7 +143,7 @@ def main(params):
     best_model = 0
     max_corr = 0
 
-
+    save_top_model = os.path.join(model_dir, 'results/drugcell_{}_{}.pt')
     model = drugcell_nn(term_size_map, term_direct_gene_map, dG, num_genes,
                         drug_dim, root, num_hiddens_genotype, num_hiddens_drug, num_hiddens_final)
     train_feature, train_label, test_feature, test_label = train_data
@@ -321,6 +321,7 @@ def main(params):
         
     torch.save(model, model_save_folder + '/model_final.pt')
     print("Best performed model (epoch)\t%d" % best_model)
+    torch.save(save_top_model.format('epoch', '0')
     cols = ['epoch', 'train_loss', 'train_corr', 'test_loss', 'test_corr']
     epoch_train_test_df = pd.DataFrame(columns=cols, index=range(params['epochs']))
     epoch_train_test_df['epoch'] = epoch_list
