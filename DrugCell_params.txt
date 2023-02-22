@@ -2,7 +2,7 @@
 model_name='DrugCell'
 data_url="http://drugcell.ucsd.edu/downloads/data.tgz"
 original_data="data.tgz"
-data_predict='drugcell_all.txt'
+data_predict='drugcell_test.txt'
 data_model='drugcell_v1.pt'
 predict_url = 'http://drugcell.ucsd.edu/downloads/drugcell_all.txt'
 model_url = 'http://drugcell.ucsd.edu/downloads/drugcell_v1.pt'

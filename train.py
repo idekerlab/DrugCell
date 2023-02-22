@@ -153,8 +153,8 @@ def run(params):
 #    with open (json_out, 'w') as fp:
 #        json.dump(params, fp, indent=4, cls=CustomEncoder)
     scores = main(params)
-#    with open(params['output_dir'] + "/scores.json", "w", encoding="utf-8") as f:
-#        json.dump(scores, f, ensure_ascii=False, indent=4)
+    with open(params['output_dir'] + "/scores.json", "w", encoding="utf-8") as f:
+        json.dump(scores, f, ensure_ascii=False, indent=4)
 #    print('IMPROVE_RESULT RMSE:\t' + str(scores['rmse']))
 
 

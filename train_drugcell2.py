@@ -178,9 +178,10 @@ def main(params):
     epoch_list = []
     train_loss_list = []
     train_corr_list = []
+    train_scc_list = []
     test_loss_list = []
     test_corr_list = []
-    
+    test_scc_list = []
     for name, param in model.named_parameters():
         term_name = name.split('_')[0]
         if '_direct_gene_layer.weight' in name:
@@ -245,7 +246,11 @@ def main(params):
         train_corr = pearson_corr(train_predict, train_label_gpu)
         train_corr_list.append(train_corr.cpu().detach().numpy())
         torch.save(model, model_save_folder + '/model_' + str(epoch) + '.pt')
-
+        train_predictions = np.array([p.cpu() for preds in train_predict for p in preds],dtype = np.float)
+        train_predictions = train_predictions[0:len(train_predictions)]
+        train_labels = np.array([l.cpu() for label in train_label_gpu for l in label],dtype = np.float)
+        train_scc = spearmanr(train_labels, train_predictions)[0]
+        train_scc_list.append(train_scc)
         model.eval()
 
         test_predict = torch.zeros(0,0).cuda(CUDA_ID)
@@ -291,6 +296,7 @@ def main(params):
 #        test_loss_a = test_loss.cpu().detach().numpy()/len(test_loader)
         test_loss_list.append(test_loss_a)
         test_corr_list.append(test_pearson_a.cpu().detach().numpy())
+        test_scc_list.append(test_spearman_a)
         if epoch == 0:
             min_test_loss = test_loss_a
             scores['test_loss'] = min_test_loss
@@ -318,19 +324,21 @@ def main(params):
 #                                                                                                                train_loss, epoch_end_time-epoch_start_time))
         epoch_start_time = epoch_end_time
         ckpt.ckpt_epoch(epoch, test_loss_a)
-        
-    torch.save(model, model_save_folder + '/model_final.pt')
+    torch.save(model, model_save_folder + '/model_final.pt')    
     print("Best performed model (epoch)\t%d" % best_model)
-    torch.save(save_top_model.format('epoch', '0')
-    cols = ['epoch', 'train_loss', 'train_corr', 'test_loss', 'test_corr']
+#    torch.save(save_top_model.format('epoch', '0', best_model))
+    cols = ['epoch', 'train_loss', 'train_corr', 'test_loss', 'test_corr', 'test_scc_list']
     epoch_train_test_df = pd.DataFrame(columns=cols, index=range(params['epochs']))
     epoch_train_test_df['epoch'] = epoch_list
     epoch_train_test_df['train_loss'] = train_loss_list
     epoch_train_test_df['train_corr'] = train_corr_list
+    epoch_train_test_df['train_scc'] = train_scc_list    
     epoch_train_test_df['test_loss'] = test_loss_list
     epoch_train_test_df['test_corr'] = test_corr_list
+    epoch_train_test_df['test_scc'] = test_scc_list
     loss_results_name = str(model_dir+'/results/loss_results.csv')
     epoch_train_test_df.to_csv(loss_results_name, index=False)
+    print(scores)
     return scores
     
 if __name__ == "__main__":

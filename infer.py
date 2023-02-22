@@ -6,11 +6,21 @@ import numpy as np
 import networkx as nx
 import networkx.algorithms.components.connected as nxacc
 import networkx.algorithms.dag as nxadag
-from code.predict_drugcell import main
+import torch.utils.data as du
+from torch.autograd import Variable
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+from torchmetrics.functional import mean_absolute_error
+from scipy.stats import spearmanr
+#from code.predict_drugcell import main
+import sklearn
 from code.utils.util import load_mapping
 from code.utils.util import load_train_data
 from code.utils.util import build_input_vector
 from code.utils.util import pearson_corr
+from code.utils.util import prepare_predict_data
+from time import time
 
 file_path = os.path.dirname(os.path.realpath(__file__))
 print(file_path)
@@ -121,7 +131,7 @@ def predict_dcell(predict_data, gene_dim, drug_dim, model_file, hidden_folder,
     model.to(device)
     #model = torch.load(model_file, map_location='cuda:%d' % CUDA_ID)
 
-    predict_feature, predict_label = predict_data
+    predict_feature, predict_label, feature_dict = predict_data
 
     predict_label_gpu = predict_label.cuda(CUDA_ID)
     model.cuda(CUDA_ID)
@@ -132,21 +142,30 @@ def predict_dcell(predict_data, gene_dim, drug_dim, model_file, hidden_folder,
     #Test
     test_predict = torch.zeros(0,0).cuda(CUDA_ID)
     term_hidden_map = {}
-
+    test_loss = 0
     batch_num = 0
+    test_loss_list = []
+    test_corr_list = []
+    print("Begin test evaluation")
     for i, (inputdata, labels) in enumerate(test_loader):
         # Convert torch tensor to Variable
+        cuda_labels = torch.autograd.Variable(labels.cuda(CUDA_ID))
         features = build_input_vector(inputdata, cell_features, drug_features)
         cuda_features = Variable(features.cuda(CUDA_ID), requires_grad=False)
-
+        loss = nn.MSELoss()
         # make prediction for test data
         aux_out_map, term_hidden_map = model(cuda_features)
         if test_predict.size()[0] == 0:
             test_predict = aux_out_map['final'].data
+            loss_a =  loss(test_predict, cuda_labels)
+            test_loss += loss_a.item() 
         else:
             test_predict = torch.cat([test_predict, aux_out_map['final'].data], dim=0)
+            loss_a =  loss(test_predict, cuda_labels)
+            test_loss += loss_a.item()
         for term, hidden_map in term_hidden_map.items():
             hidden_file = hidden_folder+'/'+term+'.hidden'
+            #print(hidden_file)
             with open(hidden_file, 'ab') as f:
                 np.savetxt(f, hidden_map.data.cpu().numpy(), '%.4e')
 
@@ -156,7 +175,7 @@ def predict_dcell(predict_data, gene_dim, drug_dim, model_file, hidden_folder,
     predictions = predictions[0:len(predictions)]
     labels = np.array([l.cpu() for label in labels for l in label],dtype = np.float)
     labels = labels[0:len(labels)]
-    test_pearson_a = calc_pcc(torch.Tensor(predictions), torch.Tensor(labels))
+    test_pearson_a = pearson_corr(torch.Tensor(predictions), torch.Tensor(labels))
     test_spearman_a = spearmanr(labels, predictions)[0]
     test_mean_absolute_error = sklearn.metrics.mean_absolute_error(y_true=labels, y_pred=predictions)
     test_r2 = sklearn.metrics.r2_score(y_true=labels, y_pred=predictions)
@@ -175,6 +194,7 @@ def predict_dcell(predict_data, gene_dim, drug_dim, model_file, hidden_folder,
     scores['test_scc'] = test_spearman_a
     test_corr = pearson_corr(test_predict, predict_label_gpu)
     print("Test pearson corr\t%s\t%.6f" % (model.root, test_corr))
+    print(scores)
     np.savetxt(result_file+'/drugcell.predict', test_predict.cpu().numpy(),'%.4e')
 
 
@@ -200,7 +220,7 @@ def run(params):
                                         datadir = params['data_dir'],
                                         cache_subdir = None)
     print('download_path: {}'.format(model_download_filepath))
-
+    model_trained_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/MODEL/EXP000/RUN000/model_final.pt"  
     model_param_key = []
     for key in params.keys():
         if key not in keys_parsing:
@@ -215,10 +235,18 @@ def run(params):
     fingerprint_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/" + params['fingerprint']
     hidden_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/" + params['hidden']
     result_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/" + params['result']
-    main(predict_download_filepath, cell2id_path, drug2id_path, str(gene2id_path), genotype_path,
-          fingerprint_path, model_download_filepath, hidden_path,
-          params['batch_size'], result_path, params['cuda_id'])
-
+    hidden =  params['drug_hiddens']
+    batchsize = params['batch_size']
+    cell_features = np.genfromtxt(genotype_path, delimiter=',')
+    drug_features = np.genfromtxt(fingerprint_path, delimiter=',')
+    CUDA_ID = params['cuda_id']
+    num_cells = len(cell2id_path)
+    num_drugs = len(drug2id_path)
+    num_genes = len(gene2id_path)
+    drug_dim = len(drug_features[0,:])
+    predict_data = prepare_predict_data(predict_download_filepath, cell2id_path, drug2id_path)
+    predict_dcell(predict_data, num_genes, drug_dim, model_trained_path, hidden_path, batchsize,
+                  result_path, cell_features, drug_features, CUDA_ID)
 
 
 def candle_main():
