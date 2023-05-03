@@ -1,5 +1,6 @@
 import os
 import candle
+import pandas as pd
 import torch
 import torchvision
 import numpy as np
@@ -13,8 +14,12 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torchmetrics.functional import mean_absolute_error
 from scipy.stats import spearmanr
+import torch.nn as nn
+import torch.nn.functional as F
 #from code.predict_drugcell import main
 import sklearn
+from code.utils.util import *
+from code.drugcell_NN import *
 from code.utils.util import load_mapping
 from code.utils.util import load_train_data
 from code.utils.util import build_input_vector
@@ -123,12 +128,17 @@ def load_train_data(drug_data, cell2id_dict, drug2id_dict):
 
 
 def predict_dcell(predict_data, gene_dim, drug_dim, model_file, hidden_folder,
-                  batch_size, result_file, cell_features, drug_features, CUDA_ID):
+                  batch_size, result_file, cell_features, drug_features, CUDA_ID,output_dir, trained_model):
     feature_dim = gene_dim + drug_dim
     device = torch.device("cuda")
     model = torch.load(model_file, map_location='cuda:%d' % CUDA_ID)
+    checkpoint = torch.load(trained_model, map_location='cuda:%d' % CUDA_ID)
     #model = torch.load(model_file, map_location='cuda:0')
     model.to(device)
+#    model.load_state_dict(checkpoint['model_state_dict'])
+#    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+#   epoch = checkpoint['epoch']
+#    loss = checkpoint['loss'] 
     #model = torch.load(model_file, map_location='cuda:%d' % CUDA_ID)
 
     predict_feature, predict_label, feature_dict = predict_data
@@ -138,6 +148,7 @@ def predict_dcell(predict_data, gene_dim, drug_dim, model_file, hidden_folder,
     model.eval()
 
     test_loader = du.DataLoader(du.TensorDataset(predict_feature,predict_label), batch_size=batch_size, shuffle=False)
+    model_dir = output_dir
 
     #Test
     test_predict = torch.zeros(0,0).cuda(CUDA_ID)
@@ -146,6 +157,8 @@ def predict_dcell(predict_data, gene_dim, drug_dim, model_file, hidden_folder,
     batch_num = 0
     test_loss_list = []
     test_corr_list = []
+    drug_list = []
+    tissue_list = []
     print("Begin test evaluation")
     for i, (inputdata, labels) in enumerate(test_loader):
         # Convert torch tensor to Variable
@@ -153,24 +166,31 @@ def predict_dcell(predict_data, gene_dim, drug_dim, model_file, hidden_folder,
         features = build_input_vector(inputdata, cell_features, drug_features)
         cuda_features = Variable(features.cuda(CUDA_ID), requires_grad=False)
         loss = nn.MSELoss()
+        values = inputdata.cpu().detach().numpy().tolist()
+        keys = [i for i in feature_dict for x in values if feature_dict [i]== x ]
+        tissue = [i.split(';')[0] for i in keys]
+        tissue_list.append(tissue)
+        drug = [i.split(';')[1] for i in keys]
+        drug_list.append(drug)
         # make prediction for test data
         aux_out_map, term_hidden_map = model(cuda_features)
         if test_predict.size()[0] == 0:
             test_predict = aux_out_map['final'].data
             loss_a =  loss(test_predict, cuda_labels)
-            test_loss += loss_a.item() 
+            print(loss_a)
+            test_loss += loss_a.item()
         else:
             test_predict = torch.cat([test_predict, aux_out_map['final'].data], dim=0)
             loss_a =  loss(test_predict, cuda_labels)
+            print(loss_a)
             test_loss += loss_a.item()
-        for term, hidden_map in term_hidden_map.items():
-            hidden_file = hidden_folder+'/'+term+'.hidden'
+ #       for term, hidden_map in term_hidden_map.items():
+ #           hidden_file = hidden_folder+'/'+term+'.hidden'
             #print(hidden_file)
-            with open(hidden_file, 'ab') as f:
-                np.savetxt(f, hidden_map.data.cpu().numpy(), '%.4e')
+ #           with open(hidden_file, 'ab') as f:
+ #               np.savetxt(f, hidden_map.data.cpu().numpy(), '%.4e')
 
         batch_num += 1
-        
     predictions = np.array([p.cpu() for preds in test_predict for p in preds] ,dtype = np.float )
     predictions = predictions[0:len(predictions)]
     labels = np.array([l.cpu() for label in labels for l in label],dtype = np.float)
@@ -185,8 +205,9 @@ def predict_dcell(predict_data, gene_dim, drug_dim, model_file, hidden_folder,
     test_loss_a = test_loss/len(test_loader)
     test_loss_list.append(test_loss_a)
     test_corr_list.append(test_pearson_a.cpu().detach().numpy())
-    scores = {}
     min_test_loss = test_loss_a
+    print(test_loss_list)
+    scores = {}
     scores['test_loss'] = min_test_loss
     scores['test_pcc'] = test_pearson_a.cpu().detach().numpy().tolist()
     scores['test_MSE'] = test_mean_absolute_error
@@ -194,9 +215,13 @@ def predict_dcell(predict_data, gene_dim, drug_dim, model_file, hidden_folder,
     scores['test_scc'] = test_spearman_a
     test_corr = pearson_corr(test_predict, predict_label_gpu)
     print("Test pearson corr\t%s\t%.6f" % (model.root, test_corr))
-    print(scores)
+    cols = ['drug', 'tissue', 'test_loss', 'test_corr']
+    metrics_test_df = pd.DataFrame(columns=cols, index=range(len(test_loader)))
+    metrics_test_df['test_loss'] = test_loss_list
+    metrics_test_df['test_corr'] = test_corr_list
+    loss_results_name = str(model_dir+'/results/test_metrics_results.csv')
+    metrics_test_df.to_csv(loss_results_name, index=False)
     np.savetxt(result_file+'/drugcell.predict', test_predict.cpu().numpy(),'%.4e')
-
 
     
 def run(params):
@@ -244,9 +269,10 @@ def run(params):
     num_drugs = len(drug2id_path)
     num_genes = len(gene2id_path)
     drug_dim = len(drug_features[0,:])
+    output_dir = params['output_dir']
     predict_data = prepare_predict_data(predict_download_filepath, cell2id_path, drug2id_path)
-    predict_dcell(predict_data, num_genes, drug_dim, model_trained_path, hidden_path, batchsize,
-                  result_path, cell_features, drug_features, CUDA_ID)
+    predict_dcell(predict_data, num_genes, drug_dim, model_download_filepath, hidden_path, batchsize,
+                  result_path, cell_features, drug_features, CUDA_ID, output_dir, model_trained_path)
 
 
 def candle_main():
