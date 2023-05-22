@@ -106,7 +106,7 @@ def prepare_predict_data(test_file, cell2id_mapping_file, drug2id_mapping_file):
     torch_test_label = torch.Tensor(test_label)
     print('Total number of cell lines = %d' % len(cell2id_mapping))
     print('Total number of drugs = %d' % len(drug2id_mapping))
-    return torch_test_feature, torch_test_label, feature_dict , cell2id_mapping, drug2id_mapping
+    return torch_test_feature, torch_test_label, feature_dict
 
 
 def prepare_train_data(train_file, test_file, cell2id_mapping_file, drug2id_mapping_file):

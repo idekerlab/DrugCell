@@ -260,6 +260,7 @@ def main(params):
         drug = []
         for i, (inputdata, labels) in enumerate(test_loader):
             features = build_input_vector(inputdata, cell_features, drug_features)
+            cuda_labels = torch.autograd.Variable(labels.cuda(CUDA_ID))
             cuda_features = Variable(features.cuda(CUDA_ID))
             aux_out_map, _ = model(cuda_features)
             values = inputdata.cpu().detach().numpy().tolist()

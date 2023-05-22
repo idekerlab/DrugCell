@@ -89,49 +89,35 @@ def preprocess(params):
                     "genotype", "cell2id","drug2id", "drug_hiddens",
                     "model_name"]
     print(os.environ['CANDLE_DATA_DIR'])
-    data_download_filepath = candle.get_file(params['original_data'], params['data_url'],
-                                        datadir = params['data_dir'],
-                                        cache_subdir = None)
-    print('download_path: {}'.format(data_download_filepath))
-    predict_download_filepath = candle.get_file(params['data_predict'], params['predict_url'],
-                                        datadir = params['data_dir'],
-                                        cache_subdir = None)
-    print('download_path: {}'.format(predict_download_filepath))
-    model_download_filepath = candle.get_file(params['data_model'], params['model_url'],
-                                        datadir = params['data_dir'],
-                                        cache_subdir = None)
-    print('download_path: {}'.format(model_download_filepath))
-
-    model_param_key = []
-    for key in params.keys():
-        if key not in keys_parsing:
-                model_param_key.append(key)
-    model_params = {key: params[key] for key in model_param_key}
+    print(os.environ['CANDLE_DATA_DIR'])
+    #requirements go here
+    data_dir = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/Improve/Data/"
+    model_params = {key: params[key] for key in keys_parsing}
     params['model_params'] = model_params
     args = candle.ArgumentStruct(**params)
-    train_data_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/" + params['train_data']
+    train_data_path = data_dir + params['train_data']
     params['train_data'] = train_data_path
-    test_data_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/" + params['test_data']
+    test_data_path = data_dir + params['test_data']
     params['test_data'] = test_data_path
-    val_data_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/" + params['val_data']
+    val_data_path = data_dir + params['val_data']
     params['val_data'] = val_data_path
-    onto_data_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/" + params['onto']
-    params['ont'] = onto_data_path   
-    cell2id_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/" + params['cell2id'] 
+    onto_data_path = data_dir + params['onto']
+    params['onto'] = onto_data_path   
+    cell2id_path = data_dir + params['cell2id'] 
     params['cell2id'] = cell2id_path
-    drug2id_path  = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/" + params['drug2id']
+    drug2id_path  = data_dir + params['drug2id']
     params['drug2id'] = drug2id_path
-    gene2id_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/" + params['gene2id']
+    gene2id_path = data_dir + params['gene2id']
     params['gene2id'] = gene2id_path
-    genotype_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/" + params['genotype']
+    genotype_path = data_dir + params['genotype']
     params['genotype'] = genotype_path
-    fingerprint_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/" + params['fingerprint']
+    fingerprint_path = data_dir + params['fingerprint']
     params['fingerprint'] = fingerprint_path
-    hidden_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/" + params['hidden']
+    hidden_path = data_dir + params['hidden']
     params['hidden_path'] = hidden_path
-#    output_dir_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/" + params['output_dir']
-#    params['output_dir'] = output_dir_path
-    result_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/" + params['result']
+    output_dir_path = data_dir + params['output_dir']
+    params['output_dir'] = output_dir_path
+    result_path = data_dir + params['result']
     params['result'] = result_path
     return(params)
 
