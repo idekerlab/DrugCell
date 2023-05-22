@@ -37,7 +37,18 @@ wheels/
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
-
+*.ipynb
+*.png
+Improve/
+Data
+MODEL
+results/
+csa_data/
+*.html
+*.list
+data/
+NOTEBOOK/
+Data_Curation_final/
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
