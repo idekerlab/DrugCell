@@ -184,13 +184,8 @@ def predict_dcell(predict_data, gene_dim, drug_dim, model_file, hidden_folder,
             loss_a =  loss(test_predict, cuda_labels)
             print(loss_a)
             test_loss += loss_a.item()
- #       for term, hidden_map in term_hidden_map.items():
- #           hidden_file = hidden_folder+'/'+term+'.hidden'
-            #print(hidden_file)
- #           with open(hidden_file, 'ab') as f:
- #               np.savetxt(f, hidden_map.data.cpu().numpy(), '%.4e')
-
         batch_num += 1
+
     predictions = np.array([p.cpu() for preds in test_predict for p in preds] ,dtype = np.float )
     predictions = predictions[0:len(predictions)]
     labels = np.array([l.cpu() for label in labels for l in label],dtype = np.float)
@@ -206,7 +201,6 @@ def predict_dcell(predict_data, gene_dim, drug_dim, model_file, hidden_folder,
     test_loss_list.append(test_loss_a)
     test_corr_list.append(test_pearson_a.cpu().detach().numpy())
     min_test_loss = test_loss_a
-    print(test_loss_list)
     scores = {}
     scores['test_loss'] = min_test_loss
     scores['test_pcc'] = test_pearson_a.cpu().detach().numpy().tolist()
@@ -221,7 +215,6 @@ def predict_dcell(predict_data, gene_dim, drug_dim, model_file, hidden_folder,
     metrics_test_df['test_corr'] = test_corr_list
     loss_results_name = str(model_dir+'/results/test_metrics_results.csv')
     metrics_test_df.to_csv(loss_results_name, index=False)
-    print(metrics_test_df)
     np.savetxt(result_file+'/drugcell.predict', test_predict.cpu().numpy(),'%.4e')
 
     
