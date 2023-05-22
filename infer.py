@@ -128,11 +128,11 @@ def load_train_data(drug_data, cell2id_dict, drug2id_dict):
 
 
 def predict_dcell(predict_data, gene_dim, drug_dim, model_file, hidden_folder,
-                  batch_size, result_file, cell_features, drug_features, CUDA_ID,output_dir, trained_model):
+                  batch_size, result_file, cell_features, drug_features, CUDA_ID,output_dir):
     feature_dim = gene_dim + drug_dim
     device = torch.device("cuda")
     model = torch.load(model_file, map_location='cuda:%d' % CUDA_ID)
-    checkpoint = torch.load(trained_model, map_location='cuda:%d' % CUDA_ID)
+#    checkpoint = torch.load(model_file, map_location='cuda:%d' % CUDA_ID)
     #model = torch.load(model_file, map_location='cuda:0')
     model.to(device)
 #    model.load_state_dict(checkpoint['model_state_dict'])
@@ -221,6 +221,7 @@ def predict_dcell(predict_data, gene_dim, drug_dim, model_file, hidden_folder,
     metrics_test_df['test_corr'] = test_corr_list
     loss_results_name = str(model_dir+'/results/test_metrics_results.csv')
     metrics_test_df.to_csv(loss_results_name, index=False)
+    print(metrics_test_df)
     np.savetxt(result_file+'/drugcell.predict', test_predict.cpu().numpy(),'%.4e')
 
     
@@ -229,23 +230,6 @@ def run(params):
                     "onto", "genotype_hiddens", "fingerprint",
                     "genotype", "cell2id","drug2id", "drug_hiddens",
                     "model_name"]
-#    candle.file_utils.get_file(params['original_data'], params['data_url'])
-#    candle.file_utils.get_file(params['data_predict'], params['predict_url'])
-#    candle.file_utils.get_file(params['data_model'], params['model_url'])
-    print(os.environ['CANDLE_DATA_DIR'])
-    data_download_filepath = candle.get_file(params['original_data'], params['data_url'],
-                                        datadir = params['data_dir'],
-                                        cache_subdir = None)
-    print('download_path: {}'.format(data_download_filepath))
-    predict_download_filepath = candle.get_file(params['data_predict'], params['predict_url'],
-                                        datadir = params['data_dir'],
-                                        cache_subdir = None)
-    print('download_path: {}'.format(predict_download_filepath))
-    model_download_filepath = candle.get_file(params['data_model'], params['model_url'],
-                                        datadir = params['data_dir'],
-                                        cache_subdir = None)
-    print('download_path: {}'.format(model_download_filepath))
-    model_trained_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/MODEL/EXP000/RUN000/model_final.pt"  
     model_param_key = []
     for key in params.keys():
         if key not in keys_parsing:
@@ -253,13 +237,15 @@ def run(params):
     model_params = {key: params[key] for key in model_param_key}
     params['model_params'] = model_params
     args = candle.ArgumentStruct(**params)
-    cell2id_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/" + params['cell2id']
-    drug2id_path  = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/" + params['drug2id']
-    gene2id_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/" + params['gene2id']
-    genotype_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/" + params['genotype']
-    fingerprint_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/" + params['fingerprint']
-    hidden_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/" + params['hidden']
-    result_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/" + params['result']
+    cell2id_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/Improve/Data/" + params['cell2id']
+    drug2id_path  = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/Improve/Data/" + params['drug2id']
+    gene2id_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/Improve/Data/" + params['gene2id']
+    genotype_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/Improve/Data/" + params['genotype']
+    fingerprint_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/Improve/Data/" + params['fingerprint']
+    hidden_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/Improve/Data/" + params['hidden']
+    result_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/Improve/Data/" + params['result']
+    val_data =  os.environ['CANDLE_DATA_DIR'] + "/DrugCell/Improve/Data/" + params['val_data']
+    trained_model = params['data_model']
     hidden =  params['drug_hiddens']
     batchsize = params['batch_size']
     cell_features = np.genfromtxt(genotype_path, delimiter=',')
@@ -270,9 +256,9 @@ def run(params):
     num_genes = len(gene2id_path)
     drug_dim = len(drug_features[0,:])
     output_dir = params['output_dir']
-    predict_data = prepare_predict_data(predict_download_filepath, cell2id_path, drug2id_path)
-    predict_dcell(predict_data, num_genes, drug_dim, model_download_filepath, hidden_path, batchsize,
-                  result_path, cell_features, drug_features, CUDA_ID, output_dir, model_trained_path)
+    predict_data = prepare_predict_data(val_data, cell2id_path, drug2id_path)
+    predict_dcell(predict_data, num_genes, drug_dim, trained_model, hidden_path, batchsize,
+                  result_path, cell_features, drug_features, CUDA_ID, output_dir)
 
 
 def candle_main():

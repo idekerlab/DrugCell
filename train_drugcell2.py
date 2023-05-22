@@ -179,9 +179,11 @@ def main(params):
     train_loss_list = []
     train_corr_list = []
     train_scc_list = []
+    train_r2_list = []
     test_loss_list = []
     test_corr_list = []
     test_scc_list = []
+    test_r2_list = []
     for name, param in model.named_parameters():
         term_name = name.split('_')[0]
         if '_direct_gene_layer.weight' in name:
@@ -313,16 +315,13 @@ def main(params):
             scores['test_r2'] = test_r2
             scores['test_scc'] = test_spearman_a
 
-        if test_pearson_a >= max_corr:
-            max_corr = test_pearson_a
+        if test_spearman_a >= max_corr:
+            max_corr = test_spearman_a
             best_model = epoch
             pred = pd.DataFrame({"Tissue": tissue, "Drug": drug, "True": labels, "Pred": predictions}).reset_index()
             pred_fname = str(model_dir+'/results/test_pred.csv')
             pred.to_csv(pred_fname, index=False)
-#        print("epoch\t%d\tcuda_id\t%d\ttrain_corr\t%.6f\tval_corr\t%.6f\ttrain_loss\t%.6f\telapsed_time\t%s" % (epoch,
-#                                                                                                                CUDA_ID,
-#                                                                                                                train_corr, test_corr,
-#                                                                                                                train_loss, epoch_end_time-epoch_start_time))
+
         epoch_start_time = epoch_end_time
         ckpt.ckpt_epoch(epoch, test_loss_a)
     torch.save(model, model_save_folder + '/model_final.pt')    
