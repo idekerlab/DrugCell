@@ -23,7 +23,7 @@ import improve_utils
 
 file_path = os.path.dirname(os.path.realpath(__file__))
 fdir = Path('__file__').resolve().parent
-source = "csa_data/raw_data/splits/"
+#source = "csa_data/raw_data/splits/"
 required = None
 additional_definitions = None
 
@@ -73,20 +73,55 @@ def preprocess(params):
     print(os.environ['CANDLE_DATA_DIR'])
     #requirements go here
     keys_parsing = ["output_dir", "hidden", "result", "metric", "data_type"]
-    data_dir = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/Improve/Data/"
-    mkdir(data_dir)
-#    data_download_filepath = candle.get_file(params['original_data'], params['data_url'],
-#                                        datadir = params['data_dir'],
-#                                        cache_subdir = None)
-#    print('download_path: {}'.format(data_download_filepath))
-#    predict_download_filepath = candle.get_file(params['data_predict'], params['predict_url'],
-#                                        datadir = params['data_dir'],
-#                                        cache_subdir = None)
-#    print('download_path: {}'.format(predict_download_filepath))
-#    model_download_filepath = candle.get_file(params['data_model'], params['model_url'],
-#                                        datadir = params['data_dir'],
-#                                        cache_subdir = None)
-#    print('download_path: {}'.format(model_download_filepath))
+    data_dir = os.environ['CANDLE_DATA_DIR'] + params['model_name'] + "/Improve/Data/"
+    original_data_path = data_dir + '/original'
+    csa_data_folder = os.path.join(os.environ['CANDLE_DATA_DIR'] + params['model_name'], 'csa_data', 'raw_data')
+    splits_dir = os.path.join(csa_data_folder, 'splits') 
+    x_data_dir = os.path.join(csa_data_folder, 'x_data')
+    y_data_dir = os.path.join(csa_data_folder, 'y_data')
+    if not os.path.exists(data_dir):
+        mkdir(data_dir)
+#        mkdir(original_data_path)
+        
+    if not os.path.exists(csa_data_folder):
+        print('creating folder: %s'%csa_data_folder)
+        os.makedirs(csa_data_folder)
+        mkdir(splits_dir)
+        mkdir(x_data_dir)
+        mkdir(y_data_dir)
+
+#    get_data(opt['data_url'], os.path.join(data_dir, 'original'), True)
+    
+    for improve_file in ['CCLE_all.txt', 'CCLE_split_0_test.txt', 'CCLE_split_0_train.txt', 'CCLE_split_0_val.txt']:
+        url_dir = params['improve_data_url'] + "/splits/" 
+        candle.file_utils.get_file(improve_file, url_dir + improve_file,
+                                   datadir=splits_dir,
+                                   cache_subdir=None)
+
+    for improve_file in ['cancer_mutation_count.txt', 'drug_SMILES.txt','drug_ecfp4_512bit.txt' ]:
+        url_dir = params['improve_data_url'] + "/x_data/" 
+        candle.file_utils.get_file(fname=improve_file, origin=url_dir + improve_file,
+                                   datadir=x_data_dir,
+                                   cache_subdir=None)
+
+    url_dir = params['improve_data_url'] + "/y_data/"
+    response_file  = 'response.txt'
+    candle.file_utils.get_file(fname=response_file, origin=url_dir + response_file,
+                                   datadir=y_data_dir,
+                                   cache_subdir=None)
+    
+    data_download_filepath = candle.get_file(params['original_data'], params['data_url'],
+                                             datadir = 'original',
+                                             cache_subdir = None)
+    print('download_path: {}'.format(data_download_filepath))
+    predict_download_filepath = candle.get_file(params['data_predict'], params['predict_url'],
+                                                datadir = 'original',
+                                                cache_subdir = None)
+    print('download_path: {}'.format(predict_download_filepath))
+    model_download_filepath = candle.get_file(params['data_model'], params['model_url'],
+                                              datadir = 'original',
+                                              cache_subdir = None)
+    print('download_path: {}'.format(model_download_filepath))
 
     model_param_key = []
     for key in params.keys():

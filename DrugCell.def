@@ -1,0 +1,40 @@
+Bootstrap: docker
+From: pytorch/pytorch:1.12.0-cuda11.3-cudnn8-devel
+
+%labels
+	MANTAINER Rohan Gnanaolivu
+
+%setup
+	cp ./src/Singularity_gpu_fix.sh $SINGULARITY_ROOTFS
+	# add local url of this repository for testing
+
+%post
+	apt-get update -y
+	apt-get install wget -y
+	apt-get install build-essential -y
+	apt-get install git -y
+	apt-get install vim -y
+	apt-get install subversion -y
+
+	chmod +x Singularity_gpu_fix.sh
+        ./Singularity_gpu_fix.sh
+
+	
+	# these three need to be compiled and linked to the cuda libs.
+	# at the moment, what works for me is to build these in a
+	# singularity shell in a sandbox with the --nv flag to singularity set.
+
+
+	python3 -m pip install networkx
+	python3 -m pip install git+https://github.com/ECP-CANDLE/candle_lib@develop
+
+	cd /usr/local
+	git clone git@github.com:JDACS4C-IMPROVE/DrugCell.git
+	cd DrugCell
+	git checkout develop
+
+	#cd /usr/local/DrugCell
+	chmod +x train.sh	
+	cp train.sh /usr/local/bin
+
+	mkdir /candle_data_dir
