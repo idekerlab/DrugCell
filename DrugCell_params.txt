@@ -1,6 +1,6 @@
 [Global_Params]
 model_name='DrugCell'
-metric='auc'
+metric='auc1'
 data_type='CCLE'
 data_url="http://drugcell.ucsd.edu/downloads/data.tgz"
 improve_data_url="https://ftp.mcs.anl.gov/pub/candle/public/improve/benchmarks/single_drug_drp/csa_data/"
