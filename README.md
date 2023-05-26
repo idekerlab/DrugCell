@@ -32,13 +32,13 @@ Note: The train.sh script will download the original authors data if the Data di
 
 ## Example
 
-git clone ....
-cd DrugCell
-mkdir Data
-check permissions if all scripts are executable
-./preprocess.sh 2 ./Data
-./train.sh 2 ./Data
-./infer.sh 2 ./Data
+   * git clone ....
+   * cd DrugCell
+   * mkdir Data	
+   * check permissions if all scripts are executable
+   * ./preprocess.sh 2 ./Data
+   * ./train.sh 2 ./Data
+   * ./infer.sh 2 ./Data
 
 ## REQUIREMENTS
    * soupsieve==2.3.2.post1
