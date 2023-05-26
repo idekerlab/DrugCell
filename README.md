@@ -63,7 +63,11 @@ Note: The train.sh script will download the original authors data if the Data di
 
 ## Installation
 
-This model is curated as poart of the [_IMPROVE Project_](https://github.com/JDACS4C-IMPROVE)
+This model is curated as part of the [_IMPROVE Project_](https://github.com/JDACS4C-IMPROVE)
+
+1. git clone ...
+2. cd DrugCell
+3. pip install -r REQUIREMENTS.txt 
 
 # DrugCell release v1.0
 DrugCell v1.0 was trained using (cell line, drug) pairs, but 
