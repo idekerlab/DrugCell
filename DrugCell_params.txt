@@ -1,35 +1,38 @@
 [Global_Params]
+
 model_name='DrugCell'
-metric='auc1'
-data_type='CCLE'
 data_url="http://drugcell.ucsd.edu/downloads/data.tgz"
 improve_data_url="https://ftp.mcs.anl.gov/pub/candle/public/improve/benchmarks/single_drug_drp/csa_data/"
-original_data="data.tgz"
-data_predict='drugcell_test.txt'
-data_model='model_final.pt'
 predict_url = 'http://drugcell.ucsd.edu/downloads/drugcell_all.txt'
 model_url = 'http://drugcell.ucsd.edu/downloads/drugcell_v1.pt'
-CUDA_ID = 0
+original_data="drugcell_data.tar.gz"
+data_predict='drugcell_test.txt'
+data_model='model_final.pt'
 load = "drugcell_v1.pt"
 train_data = "drugcell_train.txt"
 test_data = "drugcell_test.txt"
 val_data = "drugcell_val.txt"
-onto = "drugcell_ont.txt"
-hidden='MODEL/Hidden/'
-onto_in = "data/drugcell_ont.txt"
-result='MODEL/Result/'
+onto_file = "drugcell_ont.txt"
+genotype="cell2mutation.txt"
+fingerprint='drug2fingerprint.txt'
+cell2id='cell2ind.txt'
+drug2id='drug2ind.txt'
+gene2id='gene2ind.txt'
+hidden='Hidden/'
+output='Result/'
+result='Result/'
+
+#Model parameter
+metric='auc1'
+data_type='CCLE'
+CUDA_ID = 0
 learning_rate = 0.001
 batch_size = 1000
 eps=0.00001
 genotype_hiddens = 6
 drug_hiddens='100,50,6'
 final_hiddens=6
-genotype="cell2mutation.txt"
-fingerprint='drug2fingerprint.txt'
-cell2id='cell2ind.txt'
-drug2id='drug2ind.txt'
-gene2id='gene2ind.txt'
-output_dir = "MODEL"
 epochs=200
 optimizer = "adam"
 loss = "mse"
+improve_analysis='no'

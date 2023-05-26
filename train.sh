@@ -5,7 +5,16 @@
 # arg 3 CANDLE_CONFIG
 
 ### Path to your CANDLEized model's main Python script###
-CANDLE_MODEL=/homes/ac.rgnanaolivu/improve_data_dir/DrugCell/preprocessing_new.py
+CANDLE_MODEL=train.py
+
+### Set env if CANDLE_MODEL is not in same directory as this script
+IMPROVE_MODEL_DIR=${IMPROVE_MODEL_DIR:-$( dirname -- "$0" )}
+
+CANDLE_MODEL=${IMPROVE_MODEL_DIR}/${CANDLE_MODEL}
+if [ ! -f ${CANDLE_MODEL} ] ; then
+    echo No such file ${CANDLE_MODEL}
+    exit 404
+fi
 
 if [ $# -lt 2 ]; then
     echo "Illegal number of parameters"
@@ -38,6 +47,18 @@ elif [ $# -ge 3 ] ; then
 	
     fi
 fi
+
+if [ -d ${CANDLE_DATA_DIR} ]; then
+    if [ "$(ls -A ${CANDLE_DATA_DIR})" ] ; then
+	echo "using data from ${CANDLE_DATA_DIR}"
+    else
+	./candle_glue.sh
+	echo "using original data placed in ${CANDLE_DATA_DIR}"
+    fi
+fi
+
+export CANDLE_DATA_DIR=${CANDLE_DATA_DIR}
+
 
 # Display runtime arguments
 echo "using CUDA_VISIBLE_DEVICES ${CUDA_VISIBLE_DEVICES}"

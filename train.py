@@ -3,7 +3,7 @@ import os
 from train_drugcell2 import main
 import json
 from json import JSONEncoder
-
+from preprocessing_new import mkdir
 
 file_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -84,14 +84,14 @@ def initialize_parameters():
     return gParameters
 
 def preprocess(params):
-    keys_parsing = ["train_data", "test_data", "val_data",
-                    "onto", "genotype_hiddens", "fingerprint",
+    keys_parsing = ["train_data", "test_data", "val_data", "onto_file",
+                    "genotype_hiddens", "fingerprint",
                     "genotype", "cell2id","drug2id", "drug_hiddens",
                     "model_name"]
     print(os.environ['CANDLE_DATA_DIR'])
     print(os.environ['CANDLE_DATA_DIR'])
     #requirements go here
-    data_dir = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/Improve/Data/"
+    data_dir = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/Data/"
     model_params = {key: params[key] for key in keys_parsing}
     params['model_params'] = model_params
     args = candle.ArgumentStruct(**params)
@@ -101,7 +101,7 @@ def preprocess(params):
     params['test_data'] = test_data_path
     val_data_path = data_dir + params['val_data']
     params['val_data'] = val_data_path
-    onto_data_path = data_dir + params['onto']
+    onto_data_path = data_dir + params['onto_file']
     params['onto'] = onto_data_path   
     cell2id_path = data_dir + params['cell2id'] 
     params['cell2id'] = cell2id_path
@@ -115,10 +115,10 @@ def preprocess(params):
     params['fingerprint'] = fingerprint_path
     hidden_path = data_dir + params['hidden']
     params['hidden_path'] = hidden_path
-    output_dir_path = data_dir + params['output_dir']
+    output_dir_path = data_dir + params['output']
+    mkdir(output_dir_path)
     params['output_dir'] = output_dir_path
-    result_path = data_dir + params['result']
-    params['result'] = result_path
+    params['result'] = data_dir + params['result']
     return(params)
 
 
@@ -135,9 +135,11 @@ class CustomEncoder(json.JSONEncoder):
 def run(params):
     params['data_type'] = str(params['data_type'])
     json_out = params['output_dir']+'/params.json'
-#    print(params)
-#    with open (json_out, 'w') as fp:
-#        json.dump(params, fp, indent=4, cls=CustomEncoder)
+    print(params)
+
+    with open (json_out, 'w') as fp:
+        json.dump(params, fp, indent=4, cls=CustomEncoder)
+
     scores = main(params)
     with open(params['output_dir'] + "/scores.json", "w", encoding="utf-8") as f:
         json.dump(scores, f, ensure_ascii=False, indent=4)
