@@ -10,7 +10,7 @@
 # arg 3 CANDLE_CONFIG
 
 ### Path to your CANDLEized model's main Python script###
-CANDLE_MODEL=/homes/ac.rgnanaolivu/improve_data_dir/DrugCell/infer.py
+CANDLE_MODEL=infer.py
 
 if [ $# -lt 2 ] ; then
     echo "Illegal number of parameters"

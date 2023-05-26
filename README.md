@@ -10,68 +10,57 @@ subsystems in the hierarchy that are important to the model's prediction,
 warranting further investigation on underlying biological mechanisms of 
 cell response to treatments. 
 
-The current version (v1.0) of the DrugCell model 
-is trained using 509,294 (cell line, drug) pairs across 
-1,235 tumor cell lines and 684 drugs. The training data is retrieved from Genomics of
-Drug Sensitivity in Cancer database (GDSC) and the Cancer Therapeutics Response 
-Portal (CTRP) v2. 
+# IMPROVE PROJECT INSTRUCTIONS
 
-DrugCell characterizes each cell line using its genotype; 
-the feature vector for each cell is a binary vector representing 
-mutational status of the top 15% most frequently mutated genes (n = 3,008) 
-in cancer. 
-Drugs are encoded using Morgan Fingerprint (radius = 2), and the resulting 
-feature vectors are binary vectors of length 2,048. 
+The improve project requires standarized interfaces for data preprocessing, training and inference
 
-# Environment set up for training and testing of DrugCell
-DrugCell training/testing scripts require the following environmental setup:
+# DATA PREPROCESSING
 
-* Hardware required for training a new model
-    * GPU server with CUDA>=10 installed
+To create the data run the preprocess.sh code to download the data. To use a custom dataset, set the 'improve_analysis" flag to 'yes' in the DrugCell_params.txt file
 
-* Software
-    * Python 2.7 or >=3.6
-    * Anaconda
-        * Relevant information for installing Anaconda can be found in: https://docs.conda.io/projects/conda/en/latest/user-guide/install/.
-    * PyTorch >=0.4
-        * Depending on the specification of your machine, run appropriate command to install PyTorch. 
-        The installation command line can be found in https://pytorch.org/. Specify **Conda** as your default package. 
-        * Example 1: if you are working with a **CPU machine** running on **MAC OS X**, execute the following command line:
-        ```angular2
-        conda install pytorch torchvision -c pytorch
-        ```
-        * Example 2: for a **LINUX machine without GPUs**, run the following command line:
-        ```
-        conda install pytorch torchvision cpuonly -c pytorch
-        ```
-        * Example 3: for a **LINUX-based GPU server** with **CUDA version 10.1**, run the following command line:
-        ```angular2
-        conda install pytorch torchvision cudatoolkit=10.1 -c pytorch
-        ```
-     * networkx
-     * numpy
+# Model Training
 
-* Set up a virtual environment
-    * If you are testing the pre-trained model using a CPU machine, run the following command line to set up an 
-    appropriate virtual environment (pytorch3drugcellcpu) using the .yml files in _environment_setup_.
-        * MAC OS X
-        ```angular2
-        conda env create -f environment_cpu_mac.yml
-        ```
-        * LINUX
-        ```angular2
-        conda env create -f environment_cpu_linux.yml
-        ```
-    * If you are training a new model or test the pre-trained model using a GPU server, run the following command line 
-    to set up a virtual environment (pytorch3drugcell).
-        ```angular2
-         conda env create -f environment.yml
-        ```
-    * After setting up the conda virtual environment, make sure to activate environment before executing DrugCell scripts. 
-    When testing in _sample_ directory, no need to run this as the example bash scripts already have the command line. 
-        ```
-        source activate pytorch3drugcell (or pytorch3drugcellcpu)
-        ```
+1. train.sh $CUDA_VISIBLE_DEVICES $CANDLE_DATA_DIR 
+
+CANDLE_DATA_DIR=<PATH OF REPO/Data/>
+
+Note: The train.sh script will download the original authors data if the Data directory is empty
+
+      * set CUDA_VISIBLE_DEVICES to a GPU device ID to make this devices visible to the application.
+      * CANDLE_DATA_DIR, path to base CANDLE directory for model input and outputs.
+      * CANDLE_CONFIG , path to CANDLE config file must be inside CANDLE_DATA_DIR.
+
+## Example
+
+git clone ....
+cd DrugCell
+mkdir Data
+check permissions if all scripts are executable
+./preprocess.sh 2 ./Data
+./train.sh 2 ./Data
+./infer.sh 2 ./Data
+
+## REQUIREMENTS
+   * soupsieve==2.3.2.post1
+   * numpy==1.24.1
+   * numpydoc==1.5.0
+   * torch==1.8.1
+   * torchaudio==0.7.2
+   * torchmetrics==0.11.0
+   * torchvision==0.8.2+cu110
+   * numpy==1.24.1
+   * numpydoc==1.5.0
+   * pandas==1.5.2
+   * candle @ git+https://github.com/ECP-CANDLE/candle_lib@0d32c6bb97ace0370074194943dbeaf9019e6503
+   * nvidia-cuda-runtime-cu11==11.7.99
+   * networkx==3.0
+   * docutils==0.19
+   * ipython-genutils==0.2.0
+   * littleutils==0.2.2
+   * psutil==5.9.4
+   * python-dateutil==2.8.2
+
+
 ## Installation
 
 This model is curated as poart of the [_IMPROVE Project_](https://github.com/JDACS4C-IMPROVE)
@@ -114,30 +103,6 @@ your interest, execute the following:
 _drug2fingerprint.txt_, and your file containing test data in proper format (examples are provided in 
 _data_ and _sample_ folder)
 
-2. To run the model in a GPU server,  execute the following:
-    ```
-    python predict_drugcell.py -gene2id gene2ind.txt
-                                   -cell2id cell2ind.txt 
-                                   -drug2id drug2ind.txt 
-                                   -genotype cell2mutation.txt 
-                                   -fingerprint drug2fingerprint.txt 
-                                   -predict testdata.txt 
-                                   -hidden <path_to_directory_to_store_hidden_values>
-                                   -result <path_to_directory_to_store_prediction_results>
-                                   -load <path_to_model_file>
-                                   -cuda <GPU_unit_to_use> (optional)
-    ```
-    * An example bash script (_commandline_test_gpu.sh_) is provided in _sample_ folder. 
- 
-3. To load and test the DrugCell model in CPU, run _predict_drugcell_cpu.py_ 
-(instead of _predict_drugcell.py_) with same set of parameters as 2. _-cuda_ option is 
-not available in this scenario. 
-
-
-# Train a new DrugCell model
-To train a new DrugCell model using a custom data set, first make sure that you have 
-a proper virtual environment set up. Also make sure that you have all the required files 
-to run the training scripts:
 
 1. Cell feature files: _gene2ind.txt_, _cell2ind.txt_, _cell2mutation.txt_
     * A detailed description about the contents of the files is given in _DrugCell release v1.0_ section.
@@ -210,23 +175,6 @@ is to use GPU 0.
 Finally, to train a DrugCell model, execute a command line similar to the example provided in 
 _sample/commandline_cuda.sh_:
 
-```
-python -u train_drugcell.py -onto drugcell_ont.txt 
-                            -gene2id gene2ind.txt 
-                            -cell2id cell2ind.txt
-                            -drug2id drug2ind.txt
-                            -genotype cell2mutation.txt
-                            -fingerprint drug2fingerprints.txt
-                            -train drugcell_train.txt 
-                            -test drugcell_val.txt 
-                            -model ./MODEL
-                            -genotype_hiddens 6
-                            -drug_hiddens "100,50,6"
-                            -final_hiddens 6
-                            -epoch 100
-                            -batchsize 5000
-                            -cuda 1
-```
 
 # Example data files in _sample_ directory
 There are three subsets of our training data provided as toy example: drugcell_train.txt, drugcell_test.txt and drugcell_val.txt have 10,000, 1,000, and 1,000 (cell line, drug) pairs along with the corresponding drug response (area under the dose-response curve). 

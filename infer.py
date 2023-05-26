@@ -157,6 +157,7 @@ def predict_dcell(predict_data, gene_dim, drug_dim, model_file, hidden_folder,
     batch_num = 0
     test_loss_list = []
     test_corr_list = []
+    test_r2_list = []
     drug_list = []
     tissue_list = []
     print("Begin test evaluation")
@@ -193,27 +194,29 @@ def predict_dcell(predict_data, gene_dim, drug_dim, model_file, hidden_folder,
     test_pearson_a = pearson_corr(torch.Tensor(predictions), torch.Tensor(labels))
     test_spearman_a = spearmanr(labels, predictions)[0]
     test_mean_absolute_error = sklearn.metrics.mean_absolute_error(y_true=labels, y_pred=predictions)
-    test_r2 = sklearn.metrics.r2_score(y_true=labels, y_pred=predictions)
+    test_r2_a = sklearn.metrics.r2_score(y_true=labels, y_pred=predictions)
     test_rmse_a = np.sqrt(np.mean((predictions - labels)**2))
     test_loss_a = test_loss / len(test_loader)
     epoch_end_time = time()
     test_loss_a = test_loss/len(test_loader)
     test_loss_list.append(test_loss_a)
     test_corr_list.append(test_pearson_a.cpu().detach().numpy())
+    test_r2_list.append(test_r2_a)
     min_test_loss = test_loss_a
     scores = {}
     scores['test_loss'] = min_test_loss
     scores['test_pcc'] = test_pearson_a.cpu().detach().numpy().tolist()
     scores['test_MSE'] = test_mean_absolute_error
-    scores['test_r2'] = test_r2
+    scores['test_r2'] = test_r2_a
     scores['test_scc'] = test_spearman_a
     test_corr = pearson_corr(test_predict, predict_label_gpu)
     print("Test pearson corr\t%s\t%.6f" % (model.root, test_corr))
-    cols = ['drug', 'tissue', 'test_loss', 'test_corr']
+    cols = ['drug', 'tissue', 'test_loss', 'test_corr', 'test_r2']
     metrics_test_df = pd.DataFrame(columns=cols, index=range(len(test_loader)))
     metrics_test_df['test_loss'] = test_loss_list
     metrics_test_df['test_corr'] = test_corr_list
-    loss_results_name = str(model_dir+'/results/test_metrics_results.csv')
+    metrics_test_df['test_r2'] = test_r2_list
+    loss_results_name = str(result_file+'/test_metrics_results.csv')
     metrics_test_df.to_csv(loss_results_name, index=False)
     np.savetxt(result_file+'/drugcell.predict', test_predict.cpu().numpy(),'%.4e')
 
@@ -249,6 +252,8 @@ def run(params):
     num_genes = len(gene2id_path)
     drug_dim = len(drug_features[0,:])
     output_dir = params['output_dir']
+    trained_model = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/Improve/Data/" + os.path.join(output_dir) + "/" + "model_final.pt"
+    print(trained_model)
     predict_data = prepare_predict_data(val_data, cell2id_path, drug2id_path)
     predict_dcell(predict_data, num_genes, drug_dim, trained_model, hidden_path, batchsize,
                   result_path, cell_features, drug_features, CUDA_ID, output_dir)

@@ -15,6 +15,7 @@ import pandas as pd
 import candle
 import time
 import logging
+import argparse
 import networkx as nx
 import networkx.algorithms.components.connected as nxacc
 import networkx.algorithms.dag as nxadag
@@ -29,7 +30,7 @@ additional_definitions = None
 
 # This should be set outside as a user environment variable
 os.environ['CANDLE_DATA_DIR'] = os.environ['HOME'] + '/improve_data_dir/'
-
+improve_data_url="https://ftp.mcs.anl.gov/pub/candle/public/improve/benchmarks/single_drug_drp/csa_data/"
 
 # initialize class
 class DrugCell_candle(candle.Benchmark):
@@ -53,7 +54,6 @@ def initialize_parameters():
         desc='Data Preprocessor'
     )
     #Initialize parameters
-    candle_data_dir = os.getenv("CANDLE_DATA_DIR")
     gParameters = candle.finalize_parameters(preprocessor_bmk)
     return gParameters
 
@@ -69,30 +69,56 @@ def mkdir(directory):
             os.mkdir(folder)
 
 
-def preprocess(params):
+def preprocess(params, data_dir):
     print(os.environ['CANDLE_DATA_DIR'])
     #requirements go here
     keys_parsing = ["output_dir", "hidden", "result", "metric", "data_type"]
-    data_dir = os.environ['CANDLE_DATA_DIR'] + params['model_name'] + "/Improve/Data/"
-    original_data_path = data_dir + '/original'
+    if not os.path.exists(data_dir):
+        mkdir(data_dir)
+
+    args = candle.ArgumentStruct(**params)
+    train_data_path = data_dir + params['train_data']
+    params['train_data'] = train_data_path
+    test_data_path = data_dir + params['test_data']
+    params['test_data'] = test_data_path
+    val_data_path = data_dir + params['val_data']
+    params['val_data'] = val_data_path
+    onto_data_path = data_dir + params['onto_file']
+    params['onto'] = onto_data_path
+    cell2id_path = data_dir + params['cell2id'] 
+    params['cell2id'] = cell2id_path
+    drug2id_path  = data_dir + params['drug2id']
+    params['drug2id'] = drug2id_path
+    gene2id_path = data_dir + params['gene2id']
+    params['gene2id'] = gene2id_path
+    genotype_path = data_dir + params['genotype']
+    params['genotype'] = genotype_path
+    fingerprint_path = data_dir + params['fingerprint']
+    params['fingerprint'] = fingerprint_path
+    hidden_path = data_dir + params['hidden']
+    params['hidden_path'] = hidden_path
+    output_dir_path = data_dir + params['output_dir']
+    params['output_dir'] = output_dir_path
+    params['result'] = output_dir_path
+    return(params)
+
+def preprocess_anl_data(params):
     csa_data_folder = os.path.join(os.environ['CANDLE_DATA_DIR'] + params['model_name'], 'csa_data', 'raw_data')
     splits_dir = os.path.join(csa_data_folder, 'splits') 
     x_data_dir = os.path.join(csa_data_folder, 'x_data')
     y_data_dir = os.path.join(csa_data_folder, 'y_data')
-    if not os.path.exists(data_dir):
-        mkdir(data_dir)
-#        mkdir(original_data_path)
-        
+
+    
     if not os.path.exists(csa_data_folder):
         print('creating folder: %s'%csa_data_folder)
         os.makedirs(csa_data_folder)
         mkdir(splits_dir)
         mkdir(x_data_dir)
         mkdir(y_data_dir)
+        mkdir(supplementary_folder)
 
-#    get_data(opt['data_url'], os.path.join(data_dir, 'original'), True)
-    
-    for improve_file in ['CCLE_all.txt', 'CCLE_split_0_test.txt', 'CCLE_split_0_train.txt', 'CCLE_split_0_val.txt']:
+    for improve_file in ['CCLE_all.txt', 'CCLE_split_0_test.txt',
+                         'CCLE_split_0_train.txt', 'CCLE_split_0_val.txt']:
         url_dir = params['improve_data_url'] + "/splits/" 
         candle.file_utils.get_file(improve_file, url_dir + improve_file,
                                    datadir=splits_dir,
@@ -110,52 +136,22 @@ def preprocess(params):
                                    datadir=y_data_dir,
                                    cache_subdir=None)
     
+
+def dowload_author_data(params, data_dir):
     data_download_filepath = candle.get_file(params['original_data'], params['data_url'],
-                                             datadir = 'original',
+                                             datadir = data_dir,
                                              cache_subdir = None)
     print('download_path: {}'.format(data_download_filepath))
     predict_download_filepath = candle.get_file(params['data_predict'], params['predict_url'],
-                                                datadir = 'original',
+                                                datadir = data_dir,
                                                 cache_subdir = None)
     print('download_path: {}'.format(predict_download_filepath))
     model_download_filepath = candle.get_file(params['data_model'], params['model_url'],
-                                              datadir = 'original',
+                                              datadir = data_dir,
                                               cache_subdir = None)
     print('download_path: {}'.format(model_download_filepath))
 
-    model_param_key = []
-    for key in params.keys():
-        if key not in keys_parsing:
-                model_param_key.append(key)
-    model_params = {key: params[key] for key in model_param_key}
-    params['model_params'] = model_params
-    args = candle.ArgumentStruct(**params)
-    train_data_path = data_dir + params['train_data']
-    params['train_data'] = train_data_path
-    test_data_path = data_dir + params['test_data']
-    params['test_data'] = test_data_path
-    val_data_path = data_dir + params['val_data']
-    params['val_data'] = val_data_path
-    onto_data_path = data_dir + params['onto']
-    params['onto'] = onto_data_path   
-    cell2id_path = data_dir + params['cell2id'] 
-    params['cell2id'] = cell2id_path
-    drug2id_path  = data_dir + params['drug2id']
-    params['drug2id'] = drug2id_path
-    gene2id_path = data_dir + params['gene2id']
-    params['gene2id'] = gene2id_path
-    genotype_path = data_dir + params['genotype']
-    params['genotype'] = genotype_path
-    fingerprint_path = data_dir + params['fingerprint']
-    params['fingerprint'] = fingerprint_path
-    hidden_path = data_dir + params['hidden']
-    params['hidden_path'] = hidden_path
-    output_dir_path = data_dir + params['output_dir']
-    params['output_dir'] = output_dir_path
-    result_path = data_dir + params['result']
-    params['result'] = result_path
-    return(params)
-
+    
 
 def map_smiles(df, metric):
     smiles_df = improve_utils.load_smiles_data()
@@ -243,7 +239,10 @@ def generate_index_files(params, data_df):
     drug_only.to_csv(drug_index_out, sep='\t', header=None)
     return gene_list
     
-def create_ont(ont_in, ont_out, gene_list):
+def create_ont(params, gene_list):
+    data_dir = os.path.join(os.environ['CANDLE_DATA_DIR'] + params['model_name'], 'supplementary')
+    dowload_author_data(params, data_dir)
+    ont_in = data_dir + '/' + params['onto_file']
     ont_df = pd.read_csv(ont_in, sep='\t', header=None)
     ont_default_df = ont_df[ont_df[2] == 'default']
     ont_gene_df = ont_df[ont_df[2] == 'gene']
@@ -251,13 +250,23 @@ def create_ont(ont_in, ont_out, gene_list):
     GO_list = list(set(ont_gene_df[0].tolist()))
     ont_default_df = ont_default_df[(ont_default_df[0].isin(GO_list)) | (ont_default_df[1].isin(GO_list))]
     ont_cat_df = pd.concat([ont_default_df, ont_gene_df])
-    ont_cat_df.to_csv(ont_out, sep='\t', index=None, header=None)
+    ont_cat_df.to_csv(params['onto'], sep='\t', index=None, header=None)
 
-def candle_main():
+def candle_main(anl):
     params = initialize_parameters()
-    params =  preprocess(params)
-    data_df = generate_drugdata(params)
-    gene_list = generate_index_files(params, data_df)
-    create_ont(params['onto_in'],params['onto'], gene_list) 
+    data_dir = os.environ['CANDLE_DATA_DIR'] + params['model_name'] + "/Data/"
+    params =  preprocess(params, data_dir)
+    if params['improve_analysis'] == 'yes' or anl:
+        preprocess_anl_data(params)
+        data_df = generate_drugdata(params)
+        gene_list = generate_index_files(params, data_df)
+        create_ont(params, gene_list)         
+    else:
+        dowload_author_data(params, data_dir)
+
+
 if __name__ == "__main__":
-    candle_main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('-a', dest='anl',  default=False)
+    args = parser.parse_args()
+    candle_main(args.anl)
