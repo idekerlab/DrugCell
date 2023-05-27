@@ -40,25 +40,16 @@ Note: The train.sh script will download the original authors data if the Data di
    * ./train.sh 2 ./Data
    * ./infer.sh 2 ./Data
 
-## REQUIREMENTS
-   * soupsieve==2.3.2.post1
-   * numpy==1.24.1
-   * numpydoc==1.5.0
-   * torch==1.8.1
-   * torchaudio==0.7.2
-   * torchmetrics==0.11.0
-   * torchvision==0.8.2+cu110
-   * numpy==1.24.1
-   * numpydoc==1.5.0
-   * pandas==1.5.2
-   * candle @ git+https://github.com/ECP-CANDLE/candle_lib@0d32c6bb97ace0370074194943dbeaf9019e6503
-   * nvidia-cuda-runtime-cu11==11.7.99
-   * networkx==3.0
-   * docutils==0.19
-   * ipython-genutils==0.2.0
-   * littleutils==0.2.2
-   * psutil==5.9.4
-   * python-dateutil==2.8.2
+
+## Setting up environment
+
+### Install Conda version version 22.11.1
+
+* step 1: conda create -n drugcell_python python=3.9.15 anaconda
+* step 2: conda activate drucell_python
+* step 3: conda env update --name drugcell_python --file environment.yml
+* step 4: pip install torch==1.12.1+cu113 torchvision==0.13.1+cu113 torchaudio==0.12.1 torchmetrics==0.11.1 --extra-index-url https://download.pytorch.org/whl/cu113
+* step 5: pip install git+https://github.com/ECP-CANDLE/candle_lib@0d32c6bb97ace0370074194943dbeaf9019e6503
 
 
 ## Installation
