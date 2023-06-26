@@ -2,7 +2,7 @@
 
 model_name='DrugCell'
 data_url="http://drugcell.ucsd.edu/downloads/data.tgz"
-improve_data_url="https://ftp.mcs.anl.gov/pub/candle/public/improve/benchmarks/single_drug_drp/csa_data/"
+improve_data_url="https://ftp.mcs.anl.gov/pub/candle/public/improve/benchmarks/single_drug_drp/benchmark-data-pilot1/csa_data/raw_data"
 predict_url = 'http://drugcell.ucsd.edu/downloads/drugcell_all.txt'
 model_url = 'http://drugcell.ucsd.edu/downloads/drugcell_v1.pt'
 original_data="drugcell_data.tar.gz"
@@ -12,6 +12,7 @@ load = "drugcell_v1.pt"
 train_data = "drugcell_train.txt"
 test_data = "drugcell_test.txt"
 val_data = "drugcell_val.txt"
+data_type='CTRPv2'
 onto_file = "drugcell_ont.txt"
 genotype="cell2mutation.txt"
 fingerprint='drug2fingerprint.txt'
@@ -23,8 +24,7 @@ output='Result/'
 result='Result/'
 
 #Model parameter
-metric='auc1'
-data_type='CCLE'
+metric='auc'
 CUDA_ID = 0
 learning_rate = 0.001
 batch_size = 1000

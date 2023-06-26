@@ -43,6 +43,8 @@ Note: The train.sh script will download the original authors data if the Data di
 
 ## Setting up environment
 
+This model is curated as part of the [_IMPROVE Project_](https://github.com/JDACS4C-IMPROVE)
+
 ### Install Conda version version 22.11.1
 
 * step 1: conda create -n drugcell_python python=3.9.15 anaconda
@@ -51,14 +53,8 @@ Note: The train.sh script will download the original authors data if the Data di
 * step 4: pip install torch==1.12.1+cu113 torchvision==0.13.1+cu113 torchaudio==0.12.1 torchmetrics==0.11.1 --extra-index-url https://download.pytorch.org/whl/cu113
 * step 5: pip install git+https://github.com/ECP-CANDLE/candle_lib@0d32c6bb97ace0370074194943dbeaf9019e6503
 
+The following steps are included in the def file
 
-## Installation
-
-This model is curated as part of the [_IMPROVE Project_](https://github.com/JDACS4C-IMPROVE)
-
-1. git clone ...
-2. cd DrugCell
-3. pip install -r REQUIREMENTS.txt 
 
 # DrugCell release v1.0
 DrugCell v1.0 was trained using (cell line, drug) pairs, but 

@@ -1,5 +1,3 @@
-#!/homes/ac.rgnanaolivu/miniconda3/envs/rohan_python/bin/python
-
 import sys
 import os
 import numpy as np
@@ -30,7 +28,7 @@ additional_definitions = None
 
 # This should be set outside as a user environment variable
 os.environ['CANDLE_DATA_DIR'] = os.environ['HOME'] + '/improve_data_dir/'
-improve_data_url="https://ftp.mcs.anl.gov/pub/candle/public/improve/benchmarks/single_drug_drp/csa_data/"
+
 
 # initialize class
 class DrugCell_candle(candle.Benchmark):
@@ -107,7 +105,8 @@ def preprocess_anl_data(params):
     splits_dir = os.path.join(csa_data_folder, 'splits') 
     x_data_dir = os.path.join(csa_data_folder, 'x_data')
     y_data_dir = os.path.join(csa_data_folder, 'y_data')
-
+    data_type = params['data_type']
+    improve_data_url=params['improve_data_url']
     
     if not os.path.exists(csa_data_folder):
         print('creating folder: %s'%csa_data_folder)
@@ -115,23 +114,32 @@ def preprocess_anl_data(params):
         mkdir(splits_dir)
         mkdir(x_data_dir)
         mkdir(y_data_dir)
-        mkdir(supplementary_folder)
+#        mkdir(supplementary_folder)
 
-    for improve_file in ['CCLE_all.txt', 'CCLE_split_0_test.txt',
-                         'CCLE_split_0_train.txt', 'CCLE_split_0_val.txt']:
-        url_dir = params['improve_data_url'] + "/splits/" 
+    other_data_types = ['CCLE', 'gCSI', 'GDSCv1', "GDSCv2"]
+    for files in ['_all.txt', '_split_0_test.txt',
+                         '_split_0_train.txt', '_split_0_val.txt']:
+        url_dir = improve_data_url + "/splits/" 
+        improve_file = data_type + files
         candle.file_utils.get_file(improve_file, url_dir + improve_file,
                                    datadir=splits_dir,
                                    cache_subdir=None)
 
-    for improve_file in ['cancer_mutation_count.txt', 'drug_SMILES.txt','drug_ecfp4_512bit.txt' ]:
+    for database in other_data_types:
+        url_dir = improve_data_url + "/splits/"
+        improve_file = database + '_split_0_test.txt'
+        candle.file_utils.get_file(improve_file, url_dir + improve_file,
+                                   datadir=splits_dir,
+                                   cache_subdir=None)
+
+    for improve_file in ['cancer_mutation_count.tsv', 'drug_SMILES.tsv','drug_ecfp4_nbits512.tsv' ]:
         url_dir = params['improve_data_url'] + "/x_data/" 
         candle.file_utils.get_file(fname=improve_file, origin=url_dir + improve_file,
                                    datadir=x_data_dir,
                                    cache_subdir=None)
 
     url_dir = params['improve_data_url'] + "/y_data/"
-    response_file  = 'response.txt'
+    response_file  = 'response.tsv'
     candle.file_utils.get_file(fname=response_file, origin=url_dir + response_file,
                                    datadir=y_data_dir,
                                    cache_subdir=None)

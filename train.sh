@@ -58,18 +58,25 @@ if [ -d ${CANDLE_DATA_DIR} ]; then
 fi
 
 export CANDLE_DATA_DIR=${CANDLE_DATA_DIR}
+FULL_DATA_DIR="$CANDLE_DATA_DIR/$MODEL_NAME/Data"
+echo $FULL_DATA_DIR
 
+if [ -d ${FULL_DATA_DIR} ]; then
+    if [ "$(ls -A ${FULL_DATA_DIR})" ] ; then
+	echo "using data from ${FULL_DATA_DIR}"
+    else
+	./candle_glue.sh
+	echo "using original data placed in ${FULL_DATA_DIR}"
+    fi
+else
+    ./candle_glue.sh
+    echo "using original data placed in ${FULL_DATA_DIR}"
+fi
 
 # Display runtime arguments
 echo "using CUDA_VISIBLE_DEVICES ${CUDA_VISIBLE_DEVICES}"
 echo "using CANDLE_DATA_DIR ${CANDLE_DATA_DIR}"
 echo "using CANDLE_CONFIG ${CANDLE_CONFIG}"
-
-# Set up environmental variables and execute model
-echo "activating environment"
-. /homes/ac.rgnanaolivu/miniconda3/etc/profile.d/conda.sh
-conda activate rohan_python
-export TF_CPP_MIN_LOG_LEVEL=3
 
 # Set up environmental variables and execute model
 echo "running command ${CMD}"
