@@ -1,5 +1,5 @@
 Bootstrap: docker
-From: pytorch/pytorch:1.12.0-cuda11.3-cudnn8-devel
+From: pytorch/pytorch:1.12.0-cuda11.3-cudnn8-runtime
 
 %labels
 	MANTAINER Rohan Gnanaolivu
@@ -7,6 +7,12 @@ From: pytorch/pytorch:1.12.0-cuda11.3-cudnn8-devel
 %setup
 	cp ./src/Singularity_gpu_fix.sh $SINGULARITY_ROOTFS
 	# add local url of this repository for testing
+
+
+%environment
+	PATH=$PATH:/usr/local/DrugCell
+	MODEL_DIR=/usr/local/DrugCell
+	CANDLE_DATA_DIR=/candle_data_dir
 
 %post
 	apt-get update -y
@@ -16,30 +22,31 @@ From: pytorch/pytorch:1.12.0-cuda11.3-cudnn8-devel
 	apt-get install vim -y
 	apt-get install subversion -y
 
+	# install gpu fix and clean up
+	cd /
 	chmod +x Singularity_gpu_fix.sh
         ./Singularity_gpu_fix.sh
+	rm Singularity_gpu_fix.sh
 
-	
-	# these three need to be compiled and linked to the cuda libs.
-	# at the moment, what works for me is to build these in a
-	# singularity shell in a sandbox with the --nv flag to singularity set.
+        # these three need to be compiled and linked to the cuda libs.
+        # at the moment, what works for me is to build these in a
+        # singularity shell in a sandbox with the --nv flag to singularity set.
 
-        conda create -n drugcell_python python=3.9.15 anaconda
-	conda activate drucell_python
-	conda env update --name drugcell_python --file environment.yml
+
+	# create default internal candle_data_dir, map external candle_data_dir here
+	mkdir /candle_data_dir
+
+	#install python modules and model prerequites
+	pip install --upgrade pip
 	python -m pip install torch==1.12.1+cu113 torchvision==0.13.1+cu113 torchaudio==0.12.1 torchmetrics==0.11.1 --extra-index-url https://download.pytorch.org/whl/cu113
-	python -m pip install git+https://github.com/ECP-CANDLE/candle_lib@0d32c6bb97ace0370074194943dbeaf9019e6503
 	python -m pip install networkx
 	python -m pip install git+https://github.com/ECP-CANDLE/candle_lib@develop
-        
 
-        cd /usr/local
-	git clone git@github.com:JDACS4C-IMPROVE/DrugCell.git
+
+	cd /usr/local
+	git clone -b develop git@github.com:JDACS4C-IMPROVE/DrugCell.git
 	cd DrugCell
-	git checkout develop
+	pip install -r requirements.txt
 
-	#cd /usr/local/DrugCell
-	chmod +x train.sh	
-	cp train.sh /usr/local/bin
-
-	mkdir /candle_data_dir
+	cp *.sh /usr/local/bin
+	chmod a+x /usr/local/bin/*.sh
