@@ -2,7 +2,6 @@ brotlipy==0.7.0
 certifi==2022.12.7
 cffi==1.15.1
 cryptography==38.0.4
-cudatoolkit==11.3.1
 ffmpeg==4.3
 flit-core==3.6.0
 freetype==2.12.1
