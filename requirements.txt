@@ -5,7 +5,6 @@ cryptography==38.0.4
 flit-core==3.6.0
 idna==3.4
 intel-openmp==2021.4.0
-lerc==3.0
 libdeflate==1.8
 libffi==3.4.2
 libgcc-ng==11.2.0
