@@ -3,7 +3,6 @@ certifi==2022.12.7
 cffi==1.15.1
 cryptography==38.0.4
 flit-core==3.6.0
-giflib==5.2.1
 gmp==6.2.1
 gnutls==3.6.15
 idna==3.4
