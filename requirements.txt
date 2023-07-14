@@ -1,5 +1,4 @@
 brotlipy==0.7.0
-bzip2==1.0.8
 ca-certificates==2022.10.11
 certifi==2022.12.7
 cffi==1.15.1
