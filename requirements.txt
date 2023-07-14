@@ -13,8 +13,6 @@ ncurses==6.3
 nettle==3.7.3
 numpy-base==1.23.5
 openh264==2.1.1
-openssl==1.1.1s
-pip==22.3.1
 pycparser==2.21
 pyopenssl==22.0.0
 pysocks==1.7.1
@@ -26,7 +24,6 @@ setuptools==65.6.3
 six==1.16.0
 sqlite==3.40.1
 tk==8.6.12
-typing_extensions==4.4.0
 tzdata==2022g
 wheel==0.37.1
 xz==5.2.8
