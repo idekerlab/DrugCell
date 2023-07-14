@@ -217,7 +217,8 @@ def generate_index_files(params, data_df):
     gene_list = list(set(list(gene_data)))
     gene_df = pd.DataFrame(gene_data)
     gene_df.to_csv(gene_index_out, sep='\t', header=None)
-
+    print("gene index file is created and located at {0}".format(gene_index_out))
+    
     #improve id
     improve_data_list = list(set(data_df.improve_sample_id.tolist()))
     
@@ -225,12 +226,14 @@ def generate_index_files(params, data_df):
     data_df = data_df[data_df['improve_sample_id'].isin(improve_data_list)]
     cell2mut_df = mutation_data.drop(columns=['improve_sample_id'])
     cell2mut_df.to_csv(cell_mutation_out, header=None, index=None)
+    print("cell2mut file is created and located at {0}".format(cell_mutation_out))
     
     #cell2ind txt file
     cellind_df = pd.DataFrame(data_df.improve_sample_id).drop_duplicates()
     cellind_df = cellind_df.reset_index(drop=True)
     cellind_df.to_csv(cell_index_out, sep='\t', header=None)
-
+    print("cell2 index file is created and located at {0}".format(cell_index_out))
+    
     #drug2fingerprint file
     drug_list = list(set(data_df.improve_chem_id.tolist()))
     fp = improve_utils.load_morgan_fingerprint_data()
@@ -238,6 +241,7 @@ def generate_index_files(params, data_df):
     fp_df = fp_df[fp_df['improve_chem_id'].isin(drug_list)]
     fp_df = fp_df.drop(columns=['improve_chem_id'])
     fp_df.to_csv(drug_fingerprint_out, index=None, header=None)
+    print("fingerprint file created at {0}".format(drug_fingerprint_out))
 
     #drug2ind
     se = improve_utils.load_smiles_data()
@@ -245,6 +249,7 @@ def generate_index_files(params, data_df):
     drug_only = data_df.smiles.drop_duplicates()
     drug_only = drug_only.reset_index(drop=True)
     drug_only.to_csv(drug_index_out, sep='\t', header=None)
+    print("drug index created at {0}".format(drug_index_out))
     return gene_list
     
 def create_ont(params, gene_list):
@@ -258,6 +263,7 @@ def create_ont(params, gene_list):
     GO_list = list(set(ont_gene_df[0].tolist()))
     ont_default_df = ont_default_df[(ont_default_df[0].isin(GO_list)) | (ont_default_df[1].isin(GO_list))]
     ont_cat_df = pd.concat([ont_default_df, ont_gene_df])
+    print("ontology file created at {0}".format(ont_cat_df))    
     ont_cat_df.to_csv(params['onto'], sep='\t', index=None, header=None)
 
 def candle_main(anl):
