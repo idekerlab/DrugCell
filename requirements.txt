@@ -9,14 +9,6 @@ mkl==2021.4.0
 mkl-service==2.4.0
 mkl_fft==1.3.1
 mkl_random==1.2.2
-openh264==2.1.1
-pycparser==2.21
-pysocks==1.7.1
-pytorch-mutex==1.0
-readline==8.2
-requests==2.28.1
-setuptools==65.6.3
-six==1.16.0
 sqlite==3.40.1
 tk==8.6.12
 tzdata==2022g
@@ -29,7 +21,6 @@ anyio==3.6.2
 argon2-cffi==21.3.0
 argon2-cffi-bindings==21.2.0
 arrow==1.2.3
-astropy==5.2.1
 asttokens==2.2.1
 attrs==22.2.0
 autopep8==2.0.2
@@ -64,7 +55,6 @@ jinja2==3.1.2
 joblib==1.2.0
 jsonpointer==2.3
 jsonschema==4.17.3
-kiwisolver==1.4.4
 littleutils==0.2.2
 markupsafe==2.1.2
 mistune==2.0.4
@@ -88,7 +78,6 @@ pillow==9.4.0
 platformdirs==2.6.2
 prometheus-client==0.16.0
 prompt-toolkit==3.0.36
-protobuf==3.19.0
 psutil==5.9.4
 ptyprocess==0.7.0
 pubchempy==1.0.4
@@ -96,11 +85,8 @@ pure-eval==0.2.2
 pycodestyle==2.10.0
 pydantic==2.0a3
 pydantic-core==0.25.0
-pyerfa==2.0.0.1
 pygments==2.14.0
-pyparsing==3.0.9
 pyrsistent==0.19.3
-python-dateutil==2.8.2
 python-json-logger==2.0.4
 pytz==2022.7
 pyyaml==6.0
@@ -127,7 +113,6 @@ sphinxcontrib-qthelp==1.0.3
 sphinxcontrib-serializinghtml==1.1.5
 stack-data==0.6.2
 terminado==0.17.1
-threadpoolctl==3.1.0
 tinycss2==1.2.1
 tomli==2.0.1
 tornado==6.2
@@ -138,4 +123,3 @@ uri-template==1.2.0
 urllib3==1.26.14
 wcwidth==0.2.6
 widgetsnbextension==4.0.5
-zipp==3.12.0
