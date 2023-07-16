@@ -60,7 +60,8 @@ This model is curated as part of the [_IMPROVE Project_](https://github.com/JDAC
 
 * step 2: python3 -m pip install git+https://github.com/ECP-CANDLE/candle_lib@0d32c6bb97ace0370074194943dbeaf9019e6503
 
-* step 3: python3 -m pip install requirements.txt
+* step 3: python3 -m pip install networkx
+* step 4: python3 -m pip install -r requirements.txt
 
 The following steps are included in the def file
 
