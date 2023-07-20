@@ -100,45 +100,44 @@ def preprocess(params, data_dir):
     params['result'] = output_dir_path
     return(params)
 
-def preprocess_anl_data(params):
+def download_anl_data(params):
     csa_data_folder = os.path.join(os.environ['CANDLE_DATA_DIR'] + params['model_name'], 'csa_data', 'raw_data')
     splits_dir = os.path.join(csa_data_folder, 'splits') 
     x_data_dir = os.path.join(csa_data_folder, 'x_data')
     y_data_dir = os.path.join(csa_data_folder, 'y_data')
+    improve_data_url = params['improve_data_url']
     data_type = params['data_type']
-    improve_data_url=params['improve_data_url']
-    
+    data_type_list = data_type.split(",")
+    print("data downloaded dir is {0}".format(csa_data_folder))
     if not os.path.exists(csa_data_folder):
         print('creating folder: %s'%csa_data_folder)
         os.makedirs(csa_data_folder)
         mkdir(splits_dir)
         mkdir(x_data_dir)
         mkdir(y_data_dir)
-#        mkdir(supplementary_folder)
+    
 
-    other_data_types = ['CCLE', 'gCSI', 'GDSCv1', "GDSCv2"]
     for files in ['_all.txt', '_split_0_test.txt',
                          '_split_0_train.txt', '_split_0_val.txt']:
-        url_dir = improve_data_url + "/splits/" 
-        improve_file = data_type + files
-        candle.file_utils.get_file(improve_file, url_dir + improve_file,
-                                   datadir=splits_dir,
-                                   cache_subdir=None)
-
-    for database in other_data_types:
         url_dir = improve_data_url + "/splits/"
-        improve_file = database + '_split_0_test.txt'
-        candle.file_utils.get_file(improve_file, url_dir + improve_file,
-                                   datadir=splits_dir,
-                                   cache_subdir=None)
+        for dt in data_type_list:
+            improve_file = dt + files
+            data_file = url_dir + improve_file
+            print("downloading file: %s"%data_file)
+            candle.file_utils.get_file(improve_file, url_dir + improve_file,
+                                       datadir=splits_dir,
+                                       cache_subdir=None)
 
-    for improve_file in ['cancer_mutation_count.tsv', 'drug_SMILES.tsv','drug_ecfp4_nbits512.tsv' ]:
-        url_dir = params['improve_data_url'] + "/x_data/" 
+    for improve_file in ['cancer_gene_expression.tsv', 'drug_SMILES.tsv','drug_ecfp4_nbits512.tsv',
+                         'cancer_mutation_count.tsv' ]:
+        url_dir = improve_data_url + "/x_data/"
+        data_file = url_dir + improve_file
+        print("downloading file: %s"%data_file)        
         candle.file_utils.get_file(fname=improve_file, origin=url_dir + improve_file,
                                    datadir=x_data_dir,
                                    cache_subdir=None)
 
-    url_dir = params['improve_data_url'] + "/y_data/"
+    url_dir = improve_data_url + "/y_data/"
     response_file  = 'response.tsv'
     candle.file_utils.get_file(fname=response_file, origin=url_dir + response_file,
                                    datadir=y_data_dir,
@@ -177,17 +176,18 @@ def generate_drugdata(params):
     train_out =  params['train_data']
     test_out = params['test_data']
     val_out = params['val_data']
-    rs_all = improve_utils.load_single_drug_response_data(source=data_type, split=0,
+    train_data_type = params['train_data_type']
+    rs_all = improve_utils.load_single_drug_response_data(source=train_data_type, split=0,
                                                           split_type=["train", "test", 'val'],
                                                           y_col_name=metric)
-    rs_train = improve_utils.load_single_drug_response_data(source=data_type,
+    rs_train = improve_utils.load_single_drug_response_data(source=train_data_type,
                                                             split=0, split_type=["train"],
                                                             y_col_name=metric)
-    rs_test = improve_utils.load_single_drug_response_data(source=data_type,
+    rs_test = improve_utils.load_single_drug_response_data(source=train_data_type,
                                                            split=0,
                                                            split_type=["test"],
                                                            y_col_name=metric)
-    rs_val = improve_utils.load_single_drug_response_data(source=data_type,
+    rs_val = improve_utils.load_single_drug_response_data(source=train_data_type,
                                                           split=0,
                                                           split_type=["val"],
                                                           y_col_name=metric)
@@ -271,7 +271,7 @@ def candle_main(anl):
     data_dir = os.environ['CANDLE_DATA_DIR'] + params['model_name'] + "/Data/"
     params =  preprocess(params, data_dir)
     if params['improve_analysis'] == 'yes' or anl:
-        preprocess_anl_data(params)
+        download_anl_data(params)
         data_df = generate_drugdata(params)
         gene_list = generate_index_files(params, data_df)
         create_ont(params, gene_list)         
