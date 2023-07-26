@@ -1,0 +1,1 @@
+{"model": "GraphDRP", "source_datasets": ["CCLE"], "split_nums": [4, 7], "target_datasets": ["CCLE", "gCSI"], "epochs":1}
