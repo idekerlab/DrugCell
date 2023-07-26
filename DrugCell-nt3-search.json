@@ -1,50 +1,48 @@
 [
-  {
-    "name": "batch_size",
-    "type": "ordered",
-    "element_type": "int",
-      "values": [32, 64, 128, 256, 512, 1024, 2000],
-    "sigma": 1
-  },
+    {
+	"name": "batch_size",
+	"type": "ordered",
+	"element_type": "int",
+	"values": [32, 64, 128, 256, 512, 1024, 2000],
+	"sigma": 1
+    },
 
-  {
-    "name": "epochs",
-    "type": "int",
-    "lower": 20,
-    "upper": 300,
-    "sigma": 200
-  },
-
-
-  {
-    "name": "optimizer",
-    "type": "categorical",
-    "element_type": "string",
-    "values": ["adam", "sgd", "rmsprop", "adagrad", "adadelta"]
-  },
-
-  {
-    "name": "learning_rate",
-    "type": "float",
-    "lower": 0.00001,
-    "upper": 0.1,
-    "sigma": 0.0049995
-  },
-
-
-  {
-    "name": "decay",
-    "type": "float",
-    "lower": 0,
-    "upper": 1e1,
-    "sigma": 0.5
-  },
-
-  {
-    "name": "epsilon",
-    "type": "ordered",
-    "element_type": "float",
-    "values": [1e-6, 1e-8, 1e-10, 1e-12, 1e-14],
-    "sigma": 1
-  },
+    {
+	"name": "epochs",
+	"type": "int",
+	"lower": 20,
+	"upper": 300,
+	"sigma": 200
+    },
+    
+    {
+	"name": "optimizer",
+	"type": "categorical",
+	"element_type": "string",
+	"values": ["adam", "sgd", "rmsprop", "adagrad", "adadelta"]
+    },
+    
+    {
+	"name": "learning_rate",
+	"type": "float",
+	"lower": 0.00001,
+	"upper": 0.1,
+	"sigma": 0.0049995
+    },
+    
+    {
+	"name": "decay",
+	"type": "float",
+	"lower": 0,
+	"upper": 1e1,
+	"sigma": 0.5
+    },
+    
+    {
+	"name": "epsilon",
+	"type": "ordered",
+	"element_type": "float",
+	"values": [1e-6, 1e-8, 1e-10, 1e-12, 1e-14],
+	"sigma": 1
+    }
 ]
