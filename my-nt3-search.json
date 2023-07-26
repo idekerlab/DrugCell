@@ -1,0 +1,9 @@
+[
+    {
+	"name": "batch_size",
+	"type": "ordered",
+	"element_type": "int",
+	"values": [32, 64, 128, 256, 512, 1024, 2000],
+	"sigma": 1
+    }
+]
