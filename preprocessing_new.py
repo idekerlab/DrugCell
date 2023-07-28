@@ -201,7 +201,44 @@ def generate_drugdata(params):
     val_df.to_csv(val_out, header=None, index=None, sep ='\t')
     print("wrote out val data at {0}".format(val_out))    
     return rs_all
+
+def cross_study_test_data(params):
+    data_input = params['data_input']
+    binary_input = params['binary_input']
+    data_type = params['data_type']
+    metric = params['metric']
+    auc_threshold = params['auc_threshold']
+    cross_study_dir = params['cross_study']
+    metric = params['metric']
+    auc_threshold = params['auc_threshold']
+    cross_study_list =  data_type.split(',')
     
+    for i in cross_study_list:
+        data_out = cross_study_dir + '/' + i + "_test.csv"
+        binary_out =  cross_study_dir + '/' + i + "binary_test.csv"
+        rs = improve_utils.load_single_drug_response_data(source=i, split=0,
+                                                      split_type=["test"],
+                                                      y_col_name=metric)
+        rs = rs.drop_duplicates()
+        rs = rs.reset_index(drop=True)
+        rs = rs.groupby(['improve_chem_id', 'improve_sample_id']).mean().reset_index()
+        rs_df = rs.pivot(index='improve_chem_id', columns='improve_sample_id', values=metric)
+        rs_df = rs_df.reset_index()
+        rs_tdf = rs_df.set_index("improve_chem_id")
+        rs_tdf = rs_tdf.T
+        rs_binary_df = rs_tdf.applymap(convert_to_binary)
+        rep = len(rs_binary_df.columns)
+        rs_binary_df.index.names = ['compounds']
+        thesholds = np.repeat([auc_threshold],rep)
+        thesholds = list(thesholds)
+        rs_binary_df.loc['threshold'] = thesholds
+        rs_binary_df = rs_binary_df.reset_index()
+        rs_binary_df = rs_binary_df.apply(np.roll, shift=1)
+        rs_binary_df.to_csv(binary_out, index=None)
+        rs_tdf = rs_tdf.reset_index()
+        rs_tdf = rs_tdf.rename({'compounds': "sample_names"},axis=1)
+        rs_tdf.to_csv(data_out, index_label="improve_id")
+
 def generate_index_files(params, data_df):
     drug_index_out = params['drug2id']
     cell_index_out = params['cell2id']
