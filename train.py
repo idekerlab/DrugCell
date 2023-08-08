@@ -15,6 +15,11 @@ os.environ['CANDLE_DATA_DIR'] = os.environ['HOME'] + '/improve_data_dir/'
 # additional definitions
 additional_definitions = [
     {
+        "name": "genotype_hiddens",
+        "type": int,
+        "help": "number of layers"
+    },
+    {
         "name": "batchsize",
         "type": int,
         "help": "...",
@@ -35,14 +40,19 @@ additional_definitions = [
         "help": "Path to cell 2 id file",
     },
     {   
-        "name": "hidden",
-        "type": str, 
+        "name": "final_hiddens",
+        "type": int, 
         "help": "string to indicate hidden output layer ",
     },
     {   
         "name": "cuda",
         "type": int, 
         "help": "CUDA ID",
+    },
+    {  
+        "name": "data_dir",
+        "type": str, 
+        "help": "path to candle data dir",
     },
     {  
         "name": "result",
