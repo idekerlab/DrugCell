@@ -71,12 +71,16 @@ def preprocess(params, data_dir):
     print(os.environ['CANDLE_DATA_DIR'])
     #requirements go here
     keys_parsing = ["output_dir", "hidden", "result", "metric", "data_type"]
+    cross_study = data_dir + "/cross_study"
     if not os.path.exists(data_dir):
         mkdir(data_dir)
+    if not os.path.exists(cross_study):
+        mkdir(cross_study)
 
     args = candle.ArgumentStruct(**params)
     train_data_path = data_dir + params['train_data']
     params['train_data'] = train_data_path
+    params['cross_study'] = cross_study 
     test_data_path = data_dir + params['test_data']
     params['test_data'] = test_data_path
     val_data_path = data_dir + params['val_data']
@@ -201,7 +205,24 @@ def generate_drugdata(params):
     val_df.to_csv(val_out, header=None, index=None, sep ='\t')
     print("wrote out val data at {0}".format(val_out))    
     return rs_all
+
+def cross_study_test_data(params):
+    data_type = params['data_type']
+    metric = params['metric']
+    cross_study_dir = params['cross_study']
+    metric = params['metric']
+    cross_study_list =  data_type.split(',')
     
+    for i in cross_study_list:
+        data_out = cross_study_dir + '/' + i + "_test.csv"
+        rs = improve_utils.load_single_drug_response_data(source=i, split=0,
+                                                      split_type=["test"],
+                                                      y_col_name=metric)
+        
+        rs_df = map_smiles(rs, metric)
+        rs_df.to_csv(data_out, index_label="improve_id", sep='\t', index=None)        
+        print("wrote out cross study test data at {0}".format(rs_df))
+        
 def generate_index_files(params, data_df):
     drug_index_out = params['drug2id']
     cell_index_out = params['cell2id']
@@ -272,6 +293,7 @@ def candle_main(anl):
     params =  preprocess(params, data_dir)
     if params['improve_analysis'] == 'yes' or anl:
         download_anl_data(params)
+        cross_study_test_data(params)
         data_df = generate_drugdata(params)
         gene_list = generate_index_files(params, data_df)
         create_ont(params, gene_list)         

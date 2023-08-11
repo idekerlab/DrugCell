@@ -70,6 +70,24 @@ def calc_pcc(x, y):
     return torch.sum(xx*yy) / (torch.norm(xx, 2)*torch.norm(yy,2))
 
 
+def spearman_corr(x, y):
+    x_rank = torch.argsort(torch.argsort(x))
+    y_rank = torch.argsort(torch.argsort(y))
+    rank_diff = x_rank - y_rank
+    n = len(x)
+    numerator = 6 * torch.sum(rank_diff**2)
+    denominator = n * (n**2 - 1)
+    correlation = 1 - numerator / denominator
+    return correlation
+
+
+def r2_score(y_true, y_pred):
+    y_mean = torch.mean(y_true)
+    ss_tot = torch.sum((y_true - y_mean)**2)
+    ss_res = torch.sum((y_true - y_pred)**2)
+    r2 = 1 - ss_res / ss_tot
+    return r2
+
 def create_term_mask(term_direct_gene_map, gene_dim, cuda):
     term_mask_map = {}
     for term, gene_set in term_direct_gene_map.items():
@@ -256,28 +274,27 @@ def main(params):
         model.eval()
 
         test_predict = torch.zeros(0,0).cuda(CUDA_ID)
-
-        test_loss = 0
+        loss_fn = nn.MSELoss()
+        test_loss = 0.0
+        num_samples = 0
         tissue = []
         drug = []
         for i, (inputdata, labels) in enumerate(test_loader):
             features = build_input_vector(inputdata, cell_features, drug_features)
-            cuda_labels = torch.autograd.Variable(labels.cuda(CUDA_ID))
             cuda_features = Variable(features.cuda(CUDA_ID))
+            cuda_labels = torch.autograd.Variable(labels.cuda(CUDA_ID))
             aux_out_map, _ = model(cuda_features)
             values = inputdata.cpu().detach().numpy().tolist()
             keys = [i for i in feature_dict for x in values if feature_dict [i]== x ]
             tissue = [i.split(';')[0] for i in keys]
             drug = [i.split(';')[1] for i in keys]
-            loss = nn.MSELoss()
             if test_predict.size()[0] == 0:
                 test_predict = aux_out_map['final'].data
-                loss_a =  loss(test_predict, cuda_labels)
-                test_loss += loss_a.item() 
             else:
                 test_predict = torch.cat([test_predict, aux_out_map['final'].data], dim=0)
-                loss_a =  loss(test_predict, cuda_labels)
-                test_loss += loss_a.item()
+        batch_loss = loss_fn(aux_out_map['final'], cuda_labels)
+        test_loss += batch_loss.item() * len(inputdata)
+        num_samples += len(inputdata)
         logger.info(
             "\t **** TEST ****   "
             f"Epoch [{epoch + 1}/{params['epochs']}], "
@@ -288,32 +305,30 @@ def main(params):
         predictions = predictions[0:len(predictions)]
         labels = np.array([l.cpu() for label in labels for l in label],dtype = np.float)
         labels = labels[0:len(labels)]
-        test_pearson_a = calc_pcc(torch.Tensor(predictions), torch.Tensor(labels))
-        test_spearman_a = spearmanr(labels, predictions)[0]
-        test_mean_absolute_error = sklearn.metrics.mean_absolute_error(y_true=labels, y_pred=predictions)
-        test_r2 = sklearn.metrics.r2_score(y_true=labels, y_pred=predictions)
-        test_rmse_a = np.sqrt(np.mean((predictions - labels)**2))
+        test_pearson_a = pearson_corr(test_predict, test_label_gpu)
+        test_spearman_a = spearman_corr(test_predict, test_label_gpu)
+        test_mean_absolute_error = mean_absolute_error(test_label_gpu, test_predict)
+        test_r2 = r2_score(test_label_gpu, test_predict)
+        #test_rmse_a = np.sqrt(np.mean((predictions - labels)**2))
         test_loss_a = test_loss / len(test_loader)
-        epoch_end_time = time()
-        test_loss_a = test_loss/len(test_loader)
-#        test_loss_a = test_loss.cpu().detach().numpy()/len(test_loader)
         test_loss_list.append(test_loss_a)
         test_corr_list.append(test_pearson_a.cpu().detach().numpy())
-        test_scc_list.append(test_spearman_a)
+        test_scc_list.append(test_spearman_a.cpu().detach().numpy())
+        epoch_end_time = time()
         if epoch == 0:
             min_test_loss = test_loss_a
             scores['test_loss'] = min_test_loss
             scores['test_pcc'] = test_pearson_a.cpu().detach().numpy().tolist()
-            scores['test_MSE'] = test_mean_absolute_error
-            scores['test_r2'] = test_r2
-            scores['test_scc'] = test_spearman_a
-        if test_loss_a < min_test_loss:
+            scores['test_MSE'] = test_mean_absolute_error.cpu().detach().numpy().tolist()
+            scores['test_r2'] = test_r2.cpu().detach().numpy().tolist()
+            scores['test_scc'] = test_spearman_a.cpu().detach().numpy().tolist()
+        if test_spearman_a < min_test_loss:
             min_test_loss = test_loss_a
             scores['test_loss'] = min_test_loss
             scores['test_pcc'] = test_pearson_a.cpu().detach().numpy().tolist()
-            scores['test_MSE'] = test_mean_absolute_error
-            scores['test_r2'] = test_r2
-            scores['test_scc'] = test_spearman_a
+            scores['test_MSE'] = test_mean_absolute_error.cpu().detach().numpy().tolist()
+            scores['test_r2'] = test_r2.cpu().detach().numpy().tolist()
+            scores['test_scc'] = test_spearman_a.cpu().detach().numpy().tolist()
 
         if test_spearman_a >= max_corr:
             max_corr = test_spearman_a
