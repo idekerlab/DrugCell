@@ -333,9 +333,9 @@ def main(params):
         if test_spearman_a >= max_corr:
             max_corr = test_spearman_a
             best_model = epoch
-            pred = pd.DataFrame({"Tissue": tissue, "Drug": drug, "True": labels, "Pred": predictions}).reset_index()
+#            pred = pd.DataFrame({"Tissue": tissue, "Drug": drug, "True": labels, "Pred": predictions}).reset_index()
             pred_fname = str(model_dir+'/results/test_pred.csv')
-            pred.to_csv(pred_fname, index=False)
+#            pred.to_csv(pred_fname, index=False)
 
         epoch_start_time = epoch_end_time
         ckpt.ckpt_epoch(epoch, test_loss_a)
