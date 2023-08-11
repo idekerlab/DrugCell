@@ -25,6 +25,7 @@ from code.utils.util import load_train_data
 from code.utils.util import build_input_vector
 from code.utils.util import pearson_corr
 from code.utils.util import prepare_predict_data
+from train_drugcell2 import spearman_corr, mean_absolute_error, r2_score
 from time import time
 
 file_path = os.path.dirname(os.path.realpath(__file__))
@@ -153,10 +154,13 @@ def predict_dcell(predict_data, gene_dim, drug_dim, model_file, hidden_folder,
     #Test
     test_predict = torch.zeros(0,0).cuda(CUDA_ID)
     term_hidden_map = {}
-    test_loss = 0
+    test_loss = 0.0
+    loss_fn = nn.MSELoss()
+    num_samples = 0
     batch_num = 0
     test_loss_list = []
     test_corr_list = []
+    test_scc_list = []
     test_r2_list = []
     drug_list = []
     tissue_list = []
@@ -177,45 +181,39 @@ def predict_dcell(predict_data, gene_dim, drug_dim, model_file, hidden_folder,
         aux_out_map, term_hidden_map = model(cuda_features)
         if test_predict.size()[0] == 0:
             test_predict = aux_out_map['final'].data
-            loss_a =  loss(test_predict, cuda_labels)
-            print(loss_a)
-            test_loss += loss_a.item()
         else:
             test_predict = torch.cat([test_predict, aux_out_map['final'].data], dim=0)
-            loss_a =  loss(test_predict, cuda_labels)
-            print(loss_a)
-            test_loss += loss_a.item()
-        batch_num += 1
-
+        batch_loss = loss_fn(aux_out_map['final'], cuda_labels)
+        test_loss += batch_loss.item() * len(inputdata)
+        num_samples += len(inputdata)  
     predictions = np.array([p.cpu() for preds in test_predict for p in preds] ,dtype = np.float )
     predictions = predictions[0:len(predictions)]
     labels = np.array([l.cpu() for label in labels for l in label],dtype = np.float)
     labels = labels[0:len(labels)]
-    test_pearson_a = pearson_corr(torch.Tensor(predictions), torch.Tensor(labels))
-    test_spearman_a = spearmanr(labels, predictions)[0]
-    test_mean_absolute_error = sklearn.metrics.mean_absolute_error(y_true=labels, y_pred=predictions)
-    test_r2_a = sklearn.metrics.r2_score(y_true=labels, y_pred=predictions)
-    test_rmse_a = np.sqrt(np.mean((predictions - labels)**2))
+    test_pearson_a = pearson_corr(test_predict, predict_label_gpu)
+    test_spearman_a = spearman_corr(test_predict, predict_label_gpu)
+    test_mean_absolute_error = mean_absolute_error(predict_label_gpu, test_predict)
+    test_r2 = r2_score(predict_label_gpu, test_predict)
+    #test_rmse_a = np.sqrt(np.mean((predictions - labels)**2))
     test_loss_a = test_loss / len(test_loader)
-    epoch_end_time = time()
-    test_loss_a = test_loss/len(test_loader)
     test_loss_list.append(test_loss_a)
     test_corr_list.append(test_pearson_a.cpu().detach().numpy())
-    test_r2_list.append(test_r2_a)
+    test_scc_list.append(test_spearman_a.cpu().detach().numpy())
     min_test_loss = test_loss_a
     scores = {}
     scores['test_loss'] = min_test_loss
     scores['test_pcc'] = test_pearson_a.cpu().detach().numpy().tolist()
-    scores['test_MSE'] = test_mean_absolute_error
-    scores['test_r2'] = test_r2_a
-    scores['test_scc'] = test_spearman_a
-    test_corr = pearson_corr(test_predict, predict_label_gpu)
-    print("Test pearson corr\t%s\t%.6f" % (model.root, test_corr))
-    cols = ['drug', 'tissue', 'test_loss', 'test_corr', 'test_r2']
+    scores['test_MSE'] = test_mean_absolute_error.cpu().detach().numpy().tolist()
+    scores['test_r2'] = test_r2.cpu().detach().numpy().tolist()
+    scores['test_scc'] = test_spearman_a.cpu().detach().numpy().tolist()
+    print(scores)
+#    print("Test spearman corr\t%s\t%.6f" % (model.root, test_spearman_a))
+    cols = ['drug', 'tissue', 'test_loss', 'test_corr', 'test_scc', 'test_r2']
     metrics_test_df = pd.DataFrame(columns=cols, index=range(len(test_loader)))
     metrics_test_df['test_loss'] = test_loss_list
     metrics_test_df['test_corr'] = test_corr_list
-    metrics_test_df['test_r2'] = test_r2_list
+    metrics_test_df['test_scc'] = test_scc_list
+    metrics_test_df['test_r2'] = test_r2.cpu().detach().numpy().tolist()
     loss_results_name = str(result_file+'/test_metrics_results.csv')
     metrics_test_df.to_csv(loss_results_name, index=False)
     np.savetxt(result_file+'/drugcell.predict', test_predict.cpu().numpy(),'%.4e')
@@ -233,14 +231,15 @@ def run(params):
     model_params = {key: params[key] for key in model_param_key}
     params['model_params'] = model_params
     args = candle.ArgumentStruct(**params)
-    cell2id_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/Improve/Data/" + params['cell2id']
-    drug2id_path  = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/Improve/Data/" + params['drug2id']
-    gene2id_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/Improve/Data/" + params['gene2id']
-    genotype_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/Improve/Data/" + params['genotype']
-    fingerprint_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/Improve/Data/" + params['fingerprint']
-    hidden_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/Improve/Data/" + params['hidden']
-    result_path = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/Improve/Data/" + params['result']
-    val_data =  os.environ['CANDLE_DATA_DIR'] + "/DrugCell/Improve/Data/" + params['val_data']
+    data_dir = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/Data/"
+    cell2id_path = data_dir + params['cell2id']
+    drug2id_path  = data_dir + params['drug2id']
+    gene2id_path = data_dir + params['gene2id']
+    genotype_path = data_dir + params['genotype']
+    fingerprint_path = data_dir + params['fingerprint']
+    hidden_path = data_dir + params['hidden']
+    result_path = data_dir + params['result']
+    val_data =  data_dir + params['val_data']
     trained_model = params['data_model']
     hidden =  params['drug_hiddens']
     batchsize = params['batch_size']
@@ -252,7 +251,7 @@ def run(params):
     num_genes = len(gene2id_path)
     drug_dim = len(drug_features[0,:])
     output_dir = params['output_dir']
-    trained_model = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/Improve/Data/" + os.path.join(output_dir) + "/" + "model_final.pt"
+    trained_model = data_dir + "/Result/" + "model_final.pt"
     print(trained_model)
     predict_data = prepare_predict_data(val_data, cell2id_path, drug2id_path)
     predict_dcell(predict_data, num_genes, drug_dim, trained_model, hidden_path, batchsize,

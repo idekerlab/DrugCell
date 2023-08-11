@@ -3,7 +3,7 @@
 model_name='DrugCell'
 data_url="http://drugcell.ucsd.edu/downloads/data.tgz"
 improve_data_url="https://ftp.mcs.anl.gov/pub/candle/public/improve/benchmarks/single_drug_drp/benchmark-data-pilot1/csa_data/raw_data"
-train_data_type='CTRPv2'
+train_data_type='CCLE'
 data_type='CTRPv2,CCLE,GDSCv1,GDSCv2,gCSI'
 predict_url = 'http://drugcell.ucsd.edu/downloads/drugcell_all.txt'
 model_url = 'http://drugcell.ucsd.edu/downloads/drugcell_v1.pt'
@@ -25,7 +25,7 @@ output='Result/'
 result='Result/'
 
 #Model parameter
-metric='auc1'
+metric='auc'
 CUDA_ID = 0
 learning_rate = 0.0001
 batch_size = 1024
@@ -33,7 +33,7 @@ eps=0.00001
 genotype_hiddens = 6
 drug_hiddens='100,50,6'
 final_hiddens=6
-epochs=200
+epochs=3
 optimizer = "adam"
 loss = "mse"
 improve_analysis='no'
