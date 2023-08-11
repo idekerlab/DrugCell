@@ -1,0 +1,24 @@
+
+= Supervisor tool tests
+
+== GA
+
+user-case-1::
+NT3 as Benchmark
+
+user-case-2::
+GraphDRP as container.  Check the path to the SIF for your system.
+
+user-case-3::
+DeepTTC as container.  Check the path to the SIF for your system.
+
+== UPF
+
+user-case-4::
+NT3 as Benchmark.
+
+your-polaris-test::
+Template for running singularity containers on Polaris
+
+cross-study-test::
+Runs P1B1 for cross study analysis workflow

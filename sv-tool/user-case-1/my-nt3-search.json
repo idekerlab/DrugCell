@@ -1,0 +1,152 @@
+[
+  {
+    "name": "batch_size",
+    "type": "ordered",
+    "element_type": "int",
+    "values": [32, 64, 128, 256, 512, 1024],
+    "sigma": 1
+  },
+
+  {
+    "name": "epochs",
+    "type": "int",
+    "lower": 1,
+    "upper": 5,
+    "sigma": 20
+  },
+
+  {
+    "name": "activation",
+    "type": "categorical",
+    "element_type": "string",
+    "values": [
+      "softmax",
+      "elu",
+      "softplus",
+      "softsign",
+      "relu",
+      "tanh",
+      "sigmoid",
+      "hard_sigmoid",
+      "linear"
+    ]
+  },
+
+  {
+    "name": "dense",
+    "type": "categorical",
+    "element_type": "string",
+    "values": [
+      "500 100 50",
+      "1000 500 100 50",
+      "2000 1000 500 100 50",
+      "2000 1000 1000 500 100 50",
+      "2000 1000 1000 1000 500 100 50"
+    ]
+  },
+
+  {
+    "name": "optimizer",
+    "type": "categorical",
+    "element_type": "string",
+    "values": ["adam", "sgd", "rmsprop", "adagrad", "adadelta"]
+  },
+
+  {
+    "name": "dropout",
+    "type": "float",
+    "lower": 0.0,
+    "upper": 0.9,
+    "sigma": 0.045
+  },
+
+  {
+    "name": "learning_rate",
+    "type": "float",
+    "lower": 0.00001,
+    "upper": 0.1,
+    "sigma": 0.0049995
+  },
+
+  {
+    "name": "conv",
+    "type": "categorical",
+    "element_type": "string",
+    "values": [
+      "50 50 50 50 50 1",
+      "25 25 25 25 25 1",
+      "64 32 16 32 64 1",
+      "100 100 100 100 100 1",
+      "32 20 16 32 10 1"
+    ]
+  },
+
+  {
+    "name": "clipnorm",
+    "type": "float",
+    "lower": 1e-4,
+    "upper": 1e1,
+    "sigma": 0.499995
+  },
+
+  {
+    "name": "clipvalue",
+    "type": "float",
+    "lower": 1e-4,
+    "upper": 1e1,
+    "sigma": 0.499995
+  },
+
+  {
+    "name": "decay",
+    "type": "float",
+    "lower": 0,
+    "upper": 1e1,
+    "sigma": 0.5
+  },
+
+  {
+    "name": "epsilon",
+    "type": "ordered",
+    "element_type": "float",
+    "values": [1e-6, 1e-8, 1e-10, 1e-12, 1e-14],
+    "sigma": 1
+  },
+
+  {
+    "name": "rho",
+    "type": "float",
+    "lower": 1e-4,
+    "upper": 1e1,
+    "sigma": 0.499995
+  },
+
+  {
+    "name": "momentum",
+    "type": "float",
+    "lower": 0,
+    "upper": 1e1,
+    "sigma": 0.5
+  },
+
+  {
+    "name": "nesterov",
+    "type": "logical"
+  },
+
+  {
+    "name": "beta_1",
+    "type": "float",
+    "lower": 1e-4,
+    "upper": 1e1,
+    "sigma": 0.499995
+  },
+
+  {
+    "name": "beta_2",
+    "type": "float",
+    "lower": 1e-4,
+    "upper": 1e1,
+    "sigma": 0.499995
+  }
+]

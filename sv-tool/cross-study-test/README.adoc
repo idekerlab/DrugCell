@@ -1,0 +1,6 @@
+Simple p1b1 cross-study that uses the supervisor tool.
+
+Example use:
+----
+$ supervisor lambda7 cross-study cfg-my-experiment-1.sh
+----

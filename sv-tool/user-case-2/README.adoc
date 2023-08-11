@@ -1,0 +1,6 @@
+Simple GraphDRP HPO that uses the supervisor tool.
+
+Example use:
+----
+$ supervisor lambda7 GA cfg-my-experiment-1.sh
+----

@@ -66,7 +66,7 @@ improve_globals.pred_col_name_suffix = "_pred"       # suffix to predictions col
 improve_globals.y_file_name = "response.tsv"  # response data
 
 # Cancer sample features file names
-improve_globals.copy_number_fname = "cancer_copy_number.txt"  # cancer feature
+improve_globals.copy_number_fname = "cancer_copy_number.tsv"  # cancer feature
 improve_globals.discretized_copy_number_fname = "cancer_discretized_copy_number.tsv"  # cancer feature
 improve_globals.dna_methylation_fname = "cancer_DNA_methylation.tsv"  # cancer feature
 improve_globals.gene_expression_fname = "cancer_gene_expression.tsv"  # cancer feature
@@ -115,7 +115,6 @@ improve_globals.cell_mutation_file_path = improve_globals.x_data_dir/improve_glo
 # -------------------------------------
 # Drug response loaders
 # -------------------------------------
-
 
 def load_cell_mutation_data(
         gene_system_identifier: Union[str, List[str]]="Gene_Symbol",
