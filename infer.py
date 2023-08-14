@@ -211,9 +211,9 @@ def predict_dcell(predict_data, gene_dim, drug_dim, model_file, hidden_folder,
 #    print("Test spearman corr\t%s\t%.6f" % (model.root, test_spearman_a))
     cols = ['drug', 'tissue', 'test_loss', 'test_corr', 'test_scc', 'test_r2']
     metrics_test_df = pd.DataFrame(columns=cols, index=range(len(test_loader)))
-    metrics_test_df['test_loss'] = test_loss_list
-    metrics_test_df['test_corr'] = test_corr_list
-    metrics_test_df['test_scc'] = test_scc_list
+    metrics_test_df['test_loss'] = test_loss_a
+    metrics_test_df['test_corr'] = test_pearson_a.cpu().detach().numpy()
+    metrics_test_df['test_scc'] = test_spearman_a.cpu().detach().numpy()
     metrics_test_df['test_r2'] = test_r2.cpu().detach().numpy().tolist()
     loss_results_name = str(result_file+'/test_metrics_results.csv')
     metrics_test_df.to_csv(loss_results_name, index=False)
@@ -228,7 +228,7 @@ def run(params, data_dir, cross_study=False):
     model_param_key = []
     for key in params.keys():
         if key not in keys_parsing:
-                model_param_key.append(key)
+            model_param_key.append(key)
     model_params = {key: params[key] for key in model_param_key}
     params['model_params'] = model_params
     args = candle.ArgumentStruct(**params)
@@ -240,16 +240,11 @@ def run(params, data_dir, cross_study=False):
     hidden_path = data_dir + params['hidden']
     result_path = data_dir + params['result']
     val_data =  data_dir + params['val_data']
-    trained_model = params['data_model']
     hidden =  params['drug_hiddens']
     batchsize = params['batch_size']
     cell_features = np.genfromtxt(genotype_path, delimiter=',')
     drug_features = np.genfromtxt(fingerprint_path, delimiter=',')
     CUDA_ID = params['cuda_id']
-    num_cells = len(cell2id_path)
-    num_drugs = len(drug2id_path)
-    num_genes = len(gene2id_path)
-    drug_dim = len(drug_features[0,:])
     output_dir = params['output_dir']
     trained_model = data_dir + "/Result/" + "model_final.pt"
     print(trained_model)
@@ -257,9 +252,16 @@ def run(params, data_dir, cross_study=False):
         val_data_dir = data_dir + '/cross_study/'
         dt =  params['data_type'].split(",")
         for cs_data in dt:
-            val_file = dt + "_test.csv"
+            val_file = cs_data + "_test.csv"
+            cell2id_file = cs_data + "_cell2ind.txt"
+            drug2id_file = cs_data + "_drug2ind.txt"
             val_data = val_data_dir + val_file
-            print(val_data)
+            cell2id_path = val_data_dir + cell2id_file
+            drug2id_path = val_data_dir + drug2id_file
+            num_cells = len(cell2id_path)
+            num_drugs = len(drug2id_path)
+            num_genes = len(gene2id_path)
+            drug_dim = len(drug_features[0,:])
             predict_data = prepare_predict_data(val_data, cell2id_path, drug2id_path)
             predict_dcell(predict_data, num_genes, drug_dim, trained_model, hidden_path, batchsize,
                           result_path, cell_features, drug_features, CUDA_ID, output_dir)
@@ -268,21 +270,16 @@ def run(params, data_dir, cross_study=False):
                           result_path, cell_features, drug_features, CUDA_ID, output_dir)
 
 
-def candle_main(cross_study):
+def candle_main():
     params = initialize_parameters()
     data_dir = os.environ['CANDLE_DATA_DIR'] + params['model_name'] + "/Data/"
-    if params['cross_study'] == 'yes' or cross_study:
-        run(params, data_dir, cross_study)
+    if params['cross_study'] == 'yes':
+        run(params, data_dir, 'cross_study')
     else:
         run(params, data_dir)
 
 
-
-    
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('-a', dest='cross_study',  default=False)
-    args = parser.parse_args()
-    candle_main(args.cross_study)
+    candle_main()
 
     

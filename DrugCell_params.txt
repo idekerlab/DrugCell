@@ -23,6 +23,7 @@ gene2id='gene2ind.txt'
 hidden='Hidden/'
 output='Result/'
 result='Result/'
+cross_study='yes'
 
 #Model parameter
 metric='auc'
