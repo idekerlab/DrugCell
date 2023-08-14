@@ -3,7 +3,7 @@
 model_name='DrugCell'
 data_url="http://drugcell.ucsd.edu/downloads/data.tgz"
 improve_data_url="https://ftp.mcs.anl.gov/pub/candle/public/improve/benchmarks/single_drug_drp/benchmark-data-pilot1/csa_data/raw_data"
-train_data_type='CCLE'
+train_data_type='CTRPv2'
 data_type='CTRPv2,CCLE,GDSCv1,GDSCv2,gCSI'
 predict_url = 'http://drugcell.ucsd.edu/downloads/drugcell_all.txt'
 model_url = 'http://drugcell.ucsd.edu/downloads/drugcell_v1.pt'
@@ -23,6 +23,7 @@ gene2id='gene2ind.txt'
 hidden='Hidden/'
 output='Result/'
 result='Result/'
+cross_study='yes'
 
 #Model parameter
 metric='auc'
@@ -33,7 +34,7 @@ eps=0.00001
 genotype_hiddens = 6
 drug_hiddens='100,50,6'
 final_hiddens=6
-epochs=3
+epochs=200
 optimizer = "adam"
 loss = "mse"
 improve_analysis='no'
