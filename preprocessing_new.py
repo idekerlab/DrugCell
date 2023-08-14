@@ -218,10 +218,27 @@ def cross_study_test_data(params):
         rs = improve_utils.load_single_drug_response_data(source=i, split=0,
                                                       split_type=["test"],
                                                       y_col_name=metric)
+        rs_all = improve_utils.load_single_drug_response_data(source=i, split=0,
+                                                      split_type=["train", "test", 'val'],
+                                                      y_col_name=metric)
         
         rs_df = map_smiles(rs, metric)
-        rs_df.to_csv(data_out, index_label="improve_id", sep='\t', index=None)        
+        data_df = map_smiles(rs_all, metric)
+        rs_df.to_csv(data_out, index_label="improve_id", sep='\t', index=None, header=None)        
         print("wrote out cross study test data at {0}".format(rs_df))
+
+        #cell2ind txt file                                                                                                
+        cellind_df = pd.DataFrame(data_df.improve_sample_id).drop_duplicates()
+        cellind_df = cellind_df.reset_index(drop=True)
+        cellout = cross_study_dir + '/' + i + "_cell2ind.txt"
+        cellind_df.to_csv(cellout, sep='\t', header=None)
+        print("cell2 index file is created and located at {0}".format(cellout))
+
+        drug_only = data_df.smiles.drop_duplicates()
+        drug_only = drug_only.reset_index(drop=True)
+        drug_out = cross_study_dir + '/' + i + "_drug2ind.txt"
+        drug_only.to_csv(drug_out, sep='\t', header=None)
+        print("drug2 index file is created and located at {0}".format(drug_out))
         
 def generate_index_files(params, data_df):
     drug_index_out = params['drug2id']
