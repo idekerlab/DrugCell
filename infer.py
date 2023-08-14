@@ -1,6 +1,7 @@
 import os
 import candle
 import pandas as pd
+import argparse
 import torch
 import torchvision
 import numpy as np
@@ -219,7 +220,7 @@ def predict_dcell(predict_data, gene_dim, drug_dim, model_file, hidden_folder,
     np.savetxt(result_file+'/drugcell.predict', test_predict.cpu().numpy(),'%.4e')
 
     
-def run(params):
+def run(params, data_dir, cross_study=False):
     keys_parsing = ["train_data", "test_data", "val_data",
                     "onto", "genotype_hiddens", "fingerprint",
                     "genotype", "cell2id","drug2id", "drug_hiddens",
@@ -231,7 +232,6 @@ def run(params):
     model_params = {key: params[key] for key in model_param_key}
     params['model_params'] = model_params
     args = candle.ArgumentStruct(**params)
-    data_dir = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/Data/"
     cell2id_path = data_dir + params['cell2id']
     drug2id_path  = data_dir + params['drug2id']
     gene2id_path = data_dir + params['gene2id']
@@ -253,14 +253,36 @@ def run(params):
     output_dir = params['output_dir']
     trained_model = data_dir + "/Result/" + "model_final.pt"
     print(trained_model)
-    predict_data = prepare_predict_data(val_data, cell2id_path, drug2id_path)
-    predict_dcell(predict_data, num_genes, drug_dim, trained_model, hidden_path, batchsize,
-                  result_path, cell_features, drug_features, CUDA_ID, output_dir)
+    if cross_study:
+        val_data_dir = data_dir + '/cross_study/'
+        dt =  params['data_type'].split(",")
+        for cs_data in dt:
+            val_file = dt + "_test.csv"
+            val_data = val_data_dir + val_file
+            print(val_data)
+            predict_data = prepare_predict_data(val_data, cell2id_path, drug2id_path)
+            predict_dcell(predict_data, num_genes, drug_dim, trained_model, hidden_path, batchsize,
+                          result_path, cell_features, drug_features, CUDA_ID, output_dir)
+    else:
+        predict_dcell(predict_data, num_genes, drug_dim, trained_model, hidden_path, batchsize,
+                          result_path, cell_features, drug_features, CUDA_ID, output_dir)
 
 
-def candle_main():
+def candle_main(cross_study):
     params = initialize_parameters()
-    run(params)
+    data_dir = os.environ['CANDLE_DATA_DIR'] + params['model_name'] + "/Data/"
+    if params['cross_study'] == 'yes' or cross_study:
+        run(params, data_dir, cross_study)
+    else:
+        run(params, data_dir)
+
+
+
     
 if __name__ == "__main__":
-    candle_main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('-a', dest='cross_study',  default=False)
+    args = parser.parse_args()
+    candle_main(args.cross_study)
+
+    
