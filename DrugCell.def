@@ -50,4 +50,4 @@ From: pytorch/pytorch:1.12.0-cuda11.3-cudnn8-runtime
 
 	chmod a+x *.sh
 	chmod a+x *.py
-	chom -R 777 
+	chom -R 777 *
