@@ -354,6 +354,7 @@ def main(params):
     loss_results_name = str(model_dir+'/results/loss_results.csv')
     epoch_train_test_df.to_csv(loss_results_name, index=False)
     print(scores)
+    print("\nIMPROVE_RESULT MSE:\t{}\n".format(scores["test_MSE"]))
     return scores
     
 if __name__ == "__main__":
