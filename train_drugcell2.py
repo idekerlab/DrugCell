@@ -322,6 +322,7 @@ def main(params):
             scores['test_MSE'] = test_mean_absolute_error.cpu().detach().numpy().tolist()
             scores['test_r2'] = test_r2.cpu().detach().numpy().tolist()
             scores['test_scc'] = test_spearman_a.cpu().detach().numpy().tolist()
+            scores['IMPROVE RESULT'] = scores['test_MSE']
         if test_spearman_a < min_test_loss:
             min_test_loss = test_loss_a
             scores['test_loss'] = min_test_loss
@@ -329,7 +330,7 @@ def main(params):
             scores['test_MSE'] = test_mean_absolute_error.cpu().detach().numpy().tolist()
             scores['test_r2'] = test_r2.cpu().detach().numpy().tolist()
             scores['test_scc'] = test_spearman_a.cpu().detach().numpy().tolist()
-
+            scores['IMPROVE RESULT'] = scores['test_MSE']
         if test_spearman_a >= max_corr:
             max_corr = test_spearman_a
             best_model = epoch
