@@ -13,6 +13,10 @@
 
 CANDLE_MODEL=preprocessing_new.py
 
+### Set env if CANDLE_MODEL is not in same directory as this script
+IMPROVE_MODEL_DIR=${IMPROVE_MODEL_DIR:-$( dirname -- "$0" )}
+CANDLE_MODEL=${IMPROVE_MODEL_DIR}/${CANDLE_MODEL}
+
 if [ $# -lt 2 ] ; then
     echo "Illegal number of parameters"
     echo "CUDA_VISIBLE_DEVICES and CANDLE_DATA_DIR are required"
