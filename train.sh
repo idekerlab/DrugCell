@@ -9,8 +9,8 @@ CANDLE_MODEL=train.py
 
 ### Set env if CANDLE_MODEL is not in same directory as this script
 IMPROVE_MODEL_DIR=${IMPROVE_MODEL_DIR:-$( dirname -- "$0" )}
-
 CANDLE_MODEL=${IMPROVE_MODEL_DIR}/${CANDLE_MODEL}
+
 if [ ! -f ${CANDLE_MODEL} ] ; then
     echo No such file ${CANDLE_MODEL}
     exit 404
@@ -49,16 +49,17 @@ elif [ $# -ge 3 ] ; then
 fi
 
 
-# Set env if CANDLE_MODEL is not in same directory as this script
-IMPROVE_MODEL_DIR=${IMPROVE_MODEL_DIR:-$( dirname -- "$0" )}
 
-# Combine path and name and check if executable exists
-CANDLE_MODEL=${IMPROVE_MODEL_DIR}/${CANDLE_MODEL}
+# Set env if CANDLE_MODEL is not in same directory as this script
+echo COMMAND: ${CMD}
+echo $IMPROVE_MODEL_DIR
+echo $CANDLE_MODEL
+
 if [ ! -f ${CANDLE_MODEL} ] ; then
 	echo No such file ${CANDLE_MODEL}
 	exit 404
 fi
-
+echo COMMAND: ${CMD}
 
 if [ -d ${IMPROVE_MODEL_DIR} ]; then
     if [ "$(ls -A ${CANDEL_DATA_DIR})" ] ; then
