@@ -57,7 +57,8 @@ cd /usr/local
 git clone -b develop https://github.com/JDACS4C-IMPROVE/DrugCell.git
 cd DrugCell
 python3 -m pip install -r requirements.txt
-chmod a+x *.shchmod a+x *.py
+chmod a+x *.sh
+chmod a+x *.py
 sh train.sh 1 data
 ```
 
