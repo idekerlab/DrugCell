@@ -32,13 +32,10 @@ Note: The train.sh script will download the original authors data if the Data di
 
 ## Example
 
-   * git clone ....
+   * git clone 
    * cd DrugCell
-   * mkdir Data	
    * check permissions if all scripts are executable
-   * ./preprocess.sh 2 ./Data
-   * ./train.sh 2 ./Data
-   * ./infer.sh 2 ./Data
+   * ./infer.sh 1 data
 
 
 ## Setting up environment
@@ -47,21 +44,22 @@ This model is curated as part of the [_IMPROVE Project_](https://github.com/JDAC
 
 ### Install Conda version version 22.11.1
 
-#### OLD STEPS
-* step 1: conda create -n drugcell_python python=3.9.15 anaconda
-* step 2: conda activate drucell_python
-* step 3: conda env update --name drugcell_python --file environment.yml
-* step 4: pip install torch==1.12.1+cu113 torchvision==0.13.1+cu113 torchaudio==0.12.1 torchmetrics==0.11.1 --extra-index-url https://download.pytorch.org/whl/cu113
-* step 5: pip install git+https://github.com/ECP-CANDLE/candle_lib@0d32c6bb97ace0370074194943dbeaf9019e6503
 
 #### NEW STEPS (using pip only)
 
-* step 1: python3 -m pip install torch==1.12.1+cu113 torchvision==0.13.1+cu113 torchaudio==0.12.1 torchmetrics==0.11.1 --extra-index-url https://download.pytorch.org/whl/cu113
-
-* step 2: python3 -m pip install git+https://github.com/ECP-CANDLE/candle_lib@0d32c6bb97ace0370074194943dbeaf9019e6503
-
-* step 3: python3 -m pip install networkx
-* step 4: python3 -m pip install -r requirements.txt
+## USE CODE BLOCK
+```
+pip install --upgrade pip
+python3 -m pip install torch==1.12.1+cu113 torchvision==0.13.1+cu113 torchaudio==0.12.1 torchmetrics==0.11.1 --extra-index-url https://download.pytorch.org/whl/cu113
+python3 -m pip install networkx
+python3 -m pip install git+https://github.com/ECP-CANDLE/candle_lib@develop
+cd /usr/local
+git clone -b develop https://github.com/JDACS4C-IMPROVE/DrugCell.git
+cd DrugCell
+python3 -m pip install -r requirements.txt
+chmod a+x *.shchmod a+x *.py
+sh train.sh 1 data
+```
 
 The following steps are included in the def file
 

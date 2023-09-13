@@ -48,11 +48,23 @@ elif [ $# -ge 3 ] ; then
     fi
 fi
 
-if [ -d ${CANDLE_DATA_DIR} ]; then
-    if [ "$(ls -A ${CANDLE_DATA_DIR})" ] ; then
+
+# Set env if CANDLE_MODEL is not in same directory as this script
+IMPROVE_MODEL_DIR=${IMPROVE_MODEL_DIR:-$( dirname -- "$0" )}
+
+# Combine path and name and check if executable exists
+CANDLE_MODEL=${IMPROVE_MODEL_DIR}/${CANDLE_MODEL}
+if [ ! -f ${CANDLE_MODEL} ] ; then
+	echo No such file ${CANDLE_MODEL}
+	exit 404
+fi
+
+
+if [ -d ${IMPROVE_MODEL_DIR} ]; then
+    if [ "$(ls -A ${CANDEL_DATA_DIR})" ] ; then
 	echo "using data from ${CANDLE_DATA_DIR}"
     else
-	./candle_glue.sh
+	${IMPROVE_MODEL_DIR}/candle_glue.sh
 	echo "using original data placed in ${CANDLE_DATA_DIR}"
     fi
 fi
@@ -65,11 +77,11 @@ if [ -d ${FULL_DATA_DIR} ]; then
     if [ "$(ls -A ${FULL_DATA_DIR})" ] ; then
 	echo "using data from ${FULL_DATA_DIR}"
     else
-	./candle_glue.sh
+	${IMPROVE_MODEL_DIR}/candle_glue.sh
 	echo "using original data placed in ${FULL_DATA_DIR}"
     fi
 else
-    ./candle_glue.sh
+    ${IMPROVE_MODEL_DIR}/candle_glue.sh
     echo "using original data placed in ${FULL_DATA_DIR}"
 fi
 
@@ -80,4 +92,5 @@ echo "using CANDLE_CONFIG ${CANDLE_CONFIG}"
 
 # Set up environmental variables and execute model
 echo "running command ${CMD}"
+#exit
 CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} CANDLE_DATA_DIR=${CANDLE_DATA_DIR} $CMD

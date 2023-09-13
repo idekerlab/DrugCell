@@ -9,9 +9,12 @@ file_path = os.path.dirname(os.path.realpath(__file__))
 
 
 # This should be set outside as a user environment variable
-os.environ['CANDLE_DATA_DIR'] = os.environ['HOME'] + '/improve_data_dir/'
+#os.environ['CANDLE_DATA_DIR'] = os.environ['HOME'] + '/improve_data_dir/'
+if not os.environ['CANDLE_DATA_DIR']:
+    print("CANDEL DATA DIR is missing")
+    exit()
 
-
+CANDLE_DATA_DIR=os.environ['CANDLE_DATA_DIR']
 # additional definitions
 additional_definitions = [
     {
@@ -98,7 +101,6 @@ def preprocess(params):
                     "genotype_hiddens", "fingerprint",
                     "genotype", "cell2id","drug2id", "drug_hiddens",
                     "model_name"]
-    print(os.environ['CANDLE_DATA_DIR'])
     print(os.environ['CANDLE_DATA_DIR'])
     #requirements go here
     data_dir = os.environ['CANDLE_DATA_DIR'] + "/DrugCell/Data/"

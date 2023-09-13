@@ -57,3 +57,4 @@ echo "using CANDLE_CONFIG ${CANDLE_CONFIG}"
 #conda activate rohan_python
 echo "running command ${CMD}"
 CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES} CANDLE_DATA_DIR=${CANDLE_DATA_DIR} $CMD
+

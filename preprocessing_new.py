@@ -27,7 +27,7 @@ required = None
 additional_definitions = None
 
 # This should be set outside as a user environment variable
-os.environ['CANDLE_DATA_DIR'] = os.environ['HOME'] + '/improve_data_dir/'
+#os.environ['CANDLE_DATA_DIR'] = os.environ['HOME'] + '/improve_data_dir/'
 
 
 # initialize class
@@ -105,7 +105,7 @@ def preprocess(params, data_dir):
     return(params)
 
 def download_anl_data(params):
-    csa_data_folder = os.path.join(os.environ['CANDLE_DATA_DIR'] + params['model_name'], 'csa_data', 'raw_data')
+    csa_data_folder = os.path.join(os.environ['CANDLE_DATA_DIR'] + "/" + params['model_name'], 'csa_data', 'raw_data')
     splits_dir = os.path.join(csa_data_folder, 'splits') 
     x_data_dir = os.path.join(csa_data_folder, 'x_data')
     y_data_dir = os.path.join(csa_data_folder, 'y_data')
@@ -306,7 +306,7 @@ def create_ont(params, gene_list):
 
 def candle_main(anl):
     params = initialize_parameters()
-    data_dir = os.environ['CANDLE_DATA_DIR'] + params['model_name'] + "/Data/"
+    data_dir = os.environ['CANDLE_DATA_DIR'] + "/" + params['model_name'] + "/Data/"
     params =  preprocess(params, data_dir)
     if params['improve_analysis'] == 'yes' or anl:
         download_anl_data(params)
