@@ -1,2 +1,3 @@
 #!/bin/bash
-python preprocessing_new.py
+
+python3 preprocessing_new.py
